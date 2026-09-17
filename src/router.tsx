@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import AppLayout from './layout/AppLayout'
 import LoadingScreen from './layout/LoadingScreen'
 import LoginPage from './pages/LoginPage'
-import PlaceholderPage from './pages/PlaceholderPage'
 import SummaryPage from './pages/summary/SummaryPage'
 import UsersPage from './pages/UsersPage'
 
@@ -21,8 +20,6 @@ export const router = createBrowserRouter([
         lazy: { Component: async () => (await import('./pages/MapPage')).default },
       },
       { path: 'summary', Component: SummaryPage },
-      { path: 'division', element: <PlaceholderPage title="Division" /> },
-      { path: 'district', element: <PlaceholderPage title="District" /> },
       { path: 'users', Component: UsersPage },
     ],
   },

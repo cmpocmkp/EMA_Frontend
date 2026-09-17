@@ -1,11 +1,12 @@
 import { Search, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { ApiError, getTehsils, type Ratio, type SummaryCells } from '../../api'
-import { formatDecimal, formatPercent } from '../../format'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { ApiError, type Ratio } from '../../api'
+import { formatDecimal } from '../../format'
 import { type BarItem, BarList, DataTable, Dumbbell } from './charts'
 import { add, type Cell, type Division, GENDERS, type Metrics, ratio, share, summarize, toCells } from './data'
-import { Panel, Segmented } from './parts'
+import { Figure, Panel, Segmented } from './parts'
 import { divisionColumn, nameColumn, type PlaceRow, placeRows, TABLE_VIEWS } from './places'
+import { loadTehsils } from './tehsils'
 
 interface Ranking {
   key: string
@@ -32,8 +33,9 @@ function rankingValue(ranking: Ranking, metrics: Metrics) {
   return ranking.ratio ? share(ranking.ratio(metrics)) : (ranking.value?.(metrics) ?? null)
 }
 
-function rankingDisplay(ranking: Ranking, metrics: Metrics) {
-  if (ranking.ratio) return formatPercent(ranking.ratio(metrics))
+/** Share rankings show the count with its share in brackets; the bars themselves are the shares. */
+function rankingDisplay(ranking: Ranking, metrics: Metrics): ReactNode {
+  if (ranking.ratio) return <Figure ratio={ranking.ratio(metrics)} />
   const value = ranking.value?.(metrics) ?? null
   return value === null ? '–' : formatDecimal(value, 0)
 }
@@ -81,7 +83,16 @@ export default function DistrictSection(props: DistrictSectionProps) {
     emphasized: row.key === district,
   })
   const barReference =
-    referenceValue === null ? undefined : { value: referenceValue, label: `${scopeLabel}: ${rankingDisplay(ranking, reference)}` }
+    referenceValue === null
+      ? undefined
+      : {
+          value: referenceValue,
+          label: (
+            <>
+              {scopeLabel}: {rankingDisplay(ranking, reference)}
+            </>
+          ),
+        }
   // Up to 12 districts fit one list; more are shown as the highest and lowest 10.
   const split = ranked.length > 12
 
@@ -156,7 +167,7 @@ export default function DistrictSection(props: DistrictSectionProps) {
         <Panel
           wide
           title="All districts"
-          description="Percentages are out of all schools unless the column names another base. Open a district for its tehsils."
+          description="Each figure has its share in brackets, out of all schools or out of the students, labs, computers or IT teachers the column counts; hover a figure for its base. Open a district for its tehsils."
           actions={
             <div className="table-tools">
               <label className="search-field">
@@ -197,19 +208,6 @@ export default function DistrictSection(props: DistrictSectionProps) {
 }
 
 /* Tehsils -------------------------------------------------------------------------------------- */
-
-// Each district's tehsils download once per page load, when first opened.
-const tehsilRequests = new Map<string, Promise<SummaryCells>>()
-
-function loadTehsils(token: string, district: string) {
-  let request = tehsilRequests.get(district)
-  if (!request) {
-    request = getTehsils(token, district)
-    request.catch(() => tehsilRequests.delete(district))
-    tehsilRequests.set(district, request)
-  }
-  return request
-}
 
 interface TehsilDialogProps {
   district: PlaceRow | null

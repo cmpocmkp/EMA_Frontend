@@ -99,3 +99,17 @@ export type SchoolPoint = [string, number, number, 1 | 0 | null]
 export function getSchoolPoints(token: string) {
   return request<{ schools: SchoolPoint[] }>('/api/map/schools', {}, token)
 }
+
+export interface SchoolDetails {
+  emisCode: string
+  name: string
+  district: string
+  tehsil: string | null
+  level: string
+  gender: string
+  hasItLab: boolean | null
+}
+
+export function getSchool(token: string, emisCode: string) {
+  return request<SchoolDetails>(`/api/map/schools/${encodeURIComponent(emisCode)}`, {}, token)
+}

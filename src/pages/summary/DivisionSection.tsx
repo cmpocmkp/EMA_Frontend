@@ -1,8 +1,8 @@
-import { formatNumber, formatPercent } from '../../format'
+import { formatNumber } from '../../format'
 import { BarList, type Column, DataTable, Dumbbell, Heatmap, StackedBars } from './charts'
 import { add, type Cell, type Division, GENDERS, LEVELS, ratio, share, summarize } from './data'
-import { Panel } from './parts'
-import { nameColumn, type PlaceRow } from './places'
+import { Figure, Panel } from './parts'
+import { figure, nameColumn, type PlaceRow } from './places'
 
 // An ordinal grey scale, junior to senior post; checked for step contrast against the glass surface.
 const DESIGNATIONS = [
@@ -34,23 +34,11 @@ const scorecardColumns: Column<PlaceRow>[] = [
     sortValue: (row) => row.metrics.students,
     render: (row) => formatNumber(row.metrics.students),
   },
-  ...(
-    [
-      ['labs', 'With IT lab', (row: PlaceRow) => row.metrics.labCoverage],
-      ['computer', 'With working computer', (row: PlaceRow) => row.metrics.schoolsWithWorkingComputer],
-      ['internet', 'With internet', (row: PlaceRow) => row.metrics.schoolsWithInternet],
-      ['teacher', 'With IT teacher', (row: PlaceRow) => row.metrics.schoolsWithTeacher],
-      ['reached', 'Students in lab schools', (row: PlaceRow) => row.metrics.studentsReached],
-    ] as const
-  ).map(
-    ([key, label, pick]): Column<PlaceRow> => ({
-      key,
-      label,
-      numeric: true,
-      sortValue: (row) => share(pick(row)),
-      render: (row) => formatPercent(pick(row)),
-    }),
-  ),
+  figure('labs', 'With IT lab', (row) => row.metrics.labCoverage),
+  figure('computer', 'With working computer', (row) => row.metrics.schoolsWithWorkingComputer),
+  figure('internet', 'With internet', (row) => row.metrics.schoolsWithInternet),
+  figure('teacher', 'With IT teacher', (row) => row.metrics.schoolsWithTeacher),
+  figure('reached', 'Students in lab schools', (row) => row.metrics.studentsReached),
 ]
 
 interface DivisionSectionProps {
@@ -95,7 +83,11 @@ export default function DivisionSection({ cells, divisions, selected }: Division
     <section className="summary-section" aria-labelledby="divisions-heading">
       <h2 id="divisions-heading">Divisions</h2>
       <div className="panel-grid">
-        <Panel wide title="Division scorecard" description="Percentages are out of all schools in each division; students out of all students.">
+        <Panel
+          wide
+          title="Division scorecard"
+          description="Each figure has its share in brackets, out of all schools in each division; for students in lab schools, out of all students."
+        >
           <DataTable
             caption="Division scorecard"
             rows={rows}
@@ -113,11 +105,18 @@ export default function DivisionSection({ cells, divisions, selected }: Division
               key: row.key,
               label: row.name,
               value,
-              display: formatPercent(row.metrics.labCoverage),
+              display: <Figure ratio={row.metrics.labCoverage} />,
               emphasized: row.key === selected,
             }))}
             max={Math.max(provinceCoverage, ...coverage.map(({ value }) => value))}
-            reference={{ value: provinceCoverage, label: `Khyber Pakhtunkhwa: ${formatPercent(province.metrics.labCoverage)}` }}
+            reference={{
+              value: provinceCoverage,
+              label: (
+                <>
+                  Khyber Pakhtunkhwa: <Figure ratio={province.metrics.labCoverage} />
+                </>
+              ),
+            }}
           />
         </Panel>
 
@@ -149,7 +148,10 @@ export default function DivisionSection({ cells, divisions, selected }: Division
           />
         </Panel>
 
-        <Panel title="IT teachers by designation" description="Number of IT teachers in each division">
+        <Panel
+          title="IT teachers by designation"
+          description="IT teachers in each division, with their share of all IT teachers in brackets"
+        >
           <StackedBars
             series={DESIGNATIONS}
             items={rows.map((row) => ({

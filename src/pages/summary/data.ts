@@ -126,11 +126,3 @@ export function summarize(cells: Cell[]) {
   const counts = add(cells)
   return { counts, metrics: metrics(counts, add(cells.filter(isSecondary))) }
 }
-
-/** District and tehsil names arrive in capitals ("D.I.KHAN", "TOWN III"). */
-export function displayName(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/(^|[\s.(])([a-z])/g, (_, before: string, letter: string) => before + letter.toUpperCase())
-    .replace(/\b(Ii|Iii|Iv|Vi|Vii|Viii|Ix)\b/g, (numeral) => numeral.toUpperCase())
-}

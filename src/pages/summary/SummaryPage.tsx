@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ApiError, getSummary, type SummaryResponse } from '../../api'
-import { formatDateTime } from '../../format'
+import { formatDateTime, formatPlaceName } from '../../format'
 import { useSession } from '../../session/session-context'
 import Cards from './Cards'
-import { displayName, toCells } from './data'
+import { toCells } from './data'
 import DistrictSection from './DistrictSection'
 import DivisionSection from './DivisionSection'
 import EnrollmentSection from './EnrollmentSection'
+import { useTehsilCells } from './tehsils'
 import './SummaryPage.css'
 
 // One download per page load; the page remounts on every visit.
@@ -105,24 +106,53 @@ function SummaryContent({ summary, accessToken, onUnauthorized }: SummaryContent
   const requestedDivision = district ? (divisionOf.get(district) ?? null) : searchParams.get('division')
   const division = summary.divisions.some((group) => group.division === requestedDivision) ? requestedDivision : null
 
-  const scoped = useMemo(() => {
-    if (district) return cells.filter((cell) => cell.place === district)
-    if (division) return cells.filter((cell) => divisionOf.get(cell.place) === division)
-    return cells
-  }, [cells, district, division, divisionOf])
+  // Tehsils load once a district is chosen.
+  const tehsilCells = useTehsilCells(accessToken, district, onUnauthorized)
+  const tehsilNames =
+    tehsilCells.status === 'ready'
+      ? [...new Set(tehsilCells.cells.map((cell) => cell.place))].sort((a, b) =>
+          formatPlaceName(a).localeCompare(formatPlaceName(b)),
+        )
+      : []
+  const requestedTehsil = district ? searchParams.get('tehsil') : null
+  const tehsil = requestedTehsil && tehsilNames.includes(requestedTehsil) ? requestedTehsil : null
 
-  const scopeLabel = district
-    ? `${displayName(district)} district`
-    : division
-      ? `${division} division`
-      : 'Khyber Pakhtunkhwa'
+  const scoped =
+    tehsil && tehsilCells.status === 'ready'
+      ? tehsilCells.cells.filter((cell) => cell.place === tehsil)
+      : district
+        ? cells.filter((cell) => cell.place === district)
+        : division
+          ? cells.filter((cell) => divisionOf.get(cell.place) === division)
+          : cells
 
-  function setScope(next: { division?: string | null; district?: string | null }) {
+  const scopeLabel =
+    tehsil && district
+      ? `${formatPlaceName(tehsil)} tehsil, ${formatPlaceName(district)}`
+      : district
+        ? `${formatPlaceName(district)} district`
+        : division
+          ? `${division} division`
+          : 'Khyber Pakhtunkhwa'
+
+  function setScope(next: { division?: string | null; district?: string | null; tehsil?: string | null }) {
     const params = new URLSearchParams()
-    if (next.district) params.set('district', next.district)
-    else if (next.division) params.set('division', next.division)
+    if (next.district) {
+      params.set('district', next.district)
+      if (next.tehsil) params.set('tehsil', next.tehsil)
+    } else if (next.division) {
+      params.set('division', next.division)
+    }
     setSearchParams(params, { replace: true })
   }
+
+  const tehsilPlaceholder = !district
+    ? 'Choose a district first'
+    : tehsilCells.status === 'loading'
+      ? 'Loading tehsils…'
+      : tehsilCells.status === 'error'
+        ? "Couldn't load tehsils"
+        : `All of ${formatPlaceName(district)}`
 
   const districtOptions = division
     ? (summary.divisions.find((group) => group.division === division)?.districts ?? [])
@@ -150,12 +180,27 @@ function SummaryContent({ summary, accessToken, onUnauthorized }: SummaryContent
           >
             <option value="">{division ? `All of ${division}` : 'All districts'}</option>
             {[...districtOptions]
-              .sort((a, b) => displayName(a).localeCompare(displayName(b)))
+              .sort((a, b) => formatPlaceName(a).localeCompare(formatPlaceName(b)))
               .map((name) => (
                 <option key={name} value={name}>
-                  {displayName(name)}
+                  {formatPlaceName(name)}
                 </option>
               ))}
+          </select>
+        </label>
+        <label className="select-field">
+          <span>Tehsil</span>
+          <select
+            value={tehsil ?? ''}
+            disabled={tehsilNames.length === 0}
+            onChange={(event) => setScope({ division, district, tehsil: event.target.value || null })}
+          >
+            <option value="">{tehsilPlaceholder}</option>
+            {tehsilNames.map((name) => (
+              <option key={name} value={name}>
+                {formatPlaceName(name)}
+              </option>
+            ))}
           </select>
         </label>
         {(division || district) && (

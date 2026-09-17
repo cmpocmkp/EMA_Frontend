@@ -29,3 +29,11 @@ export function formatPercent({ value, total }: Ratio) {
 export function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 }
+
+/** District and tehsil names arrive in capitals: "D.I.KHAN" → "D.I.Khan", "TOWN III" → "Town III". */
+export function formatPlaceName(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/(^|[\s.(])([a-z])/g, (_, before: string, letter: string) => before + letter.toUpperCase())
+    .replace(/\b(Ii|Iii|Iv|Vi|Vii|Viii|Ix)\b/g, (numeral) => numeral.toUpperCase())
+}

@@ -1,4 +1,4 @@
-import { ChartColumn, Layers, LogOut, Map as MapIcon, MapPinned, Users } from 'lucide-react'
+import { ChartColumn, LogOut, Map as MapIcon, Users } from 'lucide-react'
 import { NavLink } from 'react-router'
 import type { User } from '../api'
 import { useSession } from '../session/session-context'
@@ -7,8 +7,6 @@ import { initials } from './initials'
 const NAV_ITEMS = [
   { to: '/map', label: 'Map', icon: MapIcon },
   { to: '/summary', label: 'Summary', icon: ChartColumn },
-  { to: '/division', label: 'Division', icon: Layers },
-  { to: '/district', label: 'District', icon: MapPinned },
   { to: '/users', label: 'Users', icon: Users },
 ]
 

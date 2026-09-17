@@ -61,6 +61,17 @@ export function RatioRow({ label, ratio }: { label: string; ratio: Ratio }) {
   )
 }
 
+/** A count with its share after it in small type, e.g. 134 (9.9%); hovering shows the base. */
+export function Figure({ ratio }: { ratio: Ratio }) {
+  if (!ratio.total) return <span className="figure">–</span>
+  return (
+    <span className="figure" title={`${formatNumber(ratio.value)} of ${formatNumber(ratio.total)}`}>
+      {formatNumber(ratio.value)}{' '}
+      <small className="figure__share">({formatPercent(ratio)})</small>
+    </span>
+  )
+}
+
 export function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <li className="stat-row">

@@ -92,6 +92,8 @@
 .panel {
   min-width: 0;
   display: grid;
+  /* One column no wider than the panel, so wide tables scroll inside it instead of stretching the page. */
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 16px;
   padding: 20px;
@@ -387,11 +389,26 @@
   outline-offset: 2px;
 }
 
-/* Horizontal bars */
+/* A count with its share in brackets: 134 (9.9%) */
+
+.figure {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.figure__share {
+  font-size: 0.8em;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+/* Horizontal bars. Rows share their parent's columns, so every bar starts and scales alike
+   however wide the figures after them are. */
 
 .bar-list ol {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(96px, 34%) minmax(0, 1fr) auto;
+  gap: 8px 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -399,9 +416,9 @@
 
 .bar-list__item {
   display: grid;
-  grid-template-columns: minmax(96px, 34%) minmax(0, 1fr) 4.6em;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 10px;
   font-size: 0.85rem;
 }
 
@@ -503,6 +520,13 @@
   color: #fff;
 }
 
+/* The share sits under the count in every cell, in the cell's own text colour for contrast. */
+.heatmap__cell .figure__share {
+  display: block;
+  margin-top: 1px;
+  color: inherit;
+}
+
 .heatmap__cell--empty {
   font-weight: 400;
   color: var(--ink-muted);
@@ -518,9 +542,11 @@
 
 /* Dumbbell */
 
+/* Label, track, then a key and figure for each group; rows share these columns so the tracks line up. */
 .dumbbell ol {
   display: grid;
-  gap: 6px;
+  grid-template-columns: minmax(96px, 30%) minmax(0, 1fr) repeat(4, auto);
+  gap: 6px 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -528,9 +554,9 @@
 
 .dumbbell__row {
   display: grid;
-  grid-template-columns: minmax(96px, 30%) minmax(0, 1fr) auto;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 12px;
   font-size: 0.85rem;
 }
 
@@ -587,16 +613,28 @@
 }
 
 .dumbbell__values {
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  color: var(--ink-muted);
+  display: contents;
+}
+
+.dumbbell__values .figure {
+  justify-self: end;
+}
+
+.dumbbell__values .dumbbell__key {
+  width: 9px;
+  height: 9px;
+}
+
+.dumbbell__values .dumbbell__key--second {
+  margin-left: 6px;
+  border-width: 2px;
 }
 
 /* Stacked bars */
 
 .stacked ol {
   display: grid;
+  grid-template-columns: minmax(84px, 28%) minmax(0, 1fr) auto;
   gap: 10px;
   margin: 0;
   padding: 0;
@@ -605,9 +643,9 @@
 
 .stacked__row {
   display: grid;
-  grid-template-columns: minmax(84px, 28%) minmax(0, 1fr) 3.6em;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 10px;
   font-size: 0.85rem;
 }
 
@@ -634,6 +672,54 @@
   text-align: right;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* On narrow screens the figures would squeeze the bars to nothing, so labels move onto their own line. */
+
+.bar-list,
+.dumbbell,
+.stacked {
+  container: chart / inline-size;
+}
+
+@container chart (max-width: 399px) {
+  .bar-list ol,
+  .stacked ol {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 12px;
+  }
+
+  .bar-list__item,
+  .stacked__row {
+    row-gap: 4px;
+  }
+
+  .bar-list__label,
+  .stacked__label {
+    grid-column: 1 / -1;
+  }
+}
+
+/* The label shares a line with both figures, and the track runs the full width beneath them. */
+@container chart (max-width: 519px) {
+  .dumbbell ol {
+    grid-template-columns: minmax(0, 1fr) repeat(4, auto);
+    row-gap: 12px;
+  }
+
+  .dumbbell__row {
+    row-gap: 4px;
+  }
+
+  .dumbbell__label {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .dumbbell__track {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
 }
 
 /* Columns */

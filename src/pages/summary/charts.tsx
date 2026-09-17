@@ -2,7 +2,8 @@ import { ArrowDown, ArrowUp } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useMemo, useState } from 'react'
 import type { Ratio } from '../../api'
 import { formatCompact, formatNumber, formatPercent } from '../../format'
-import { share } from './data'
+import { ratio, share } from './data'
+import { Figure } from './parts'
 
 /* Horizontal bars ------------------------------------------------------------------------------ */
 
@@ -11,8 +12,8 @@ export interface BarItem {
   label: string
   /** Bar length, in the same unit as `max`. */
   value: number
-  /** Text shown after the bar. */
-  display: string
+  /** Shown after the bar. */
+  display: ReactNode
   emphasized?: boolean
 }
 
@@ -20,7 +21,7 @@ interface BarListProps {
   items: BarItem[]
   max: number
   /** A vertical marker for comparison, such as the provincial figure. */
-  reference?: { value: number; label: string }
+  reference?: { value: number; label: ReactNode }
 }
 
 export function BarList({ items, max, reference }: BarListProps) {
@@ -90,9 +91,9 @@ export function Heatmap({ rowHeader, rows, columns, cell }: HeatmapProps) {
               <tr key={row.key} className={row.emphasized ? 'is-emphasized' : undefined}>
                 <th scope="row">{row.label}</th>
                 {columns.map((column) => {
-                  const ratio = cell(row.key, column.key)
-                  const fraction = ratio ? share(ratio) : null
-                  if (fraction === null || !ratio) {
+                  const counts = cell(row.key, column.key)
+                  const fraction = counts ? share(counts) : null
+                  if (fraction === null || !counts) {
                     return (
                       <td key={column.key} className="heatmap__cell heatmap__cell--empty">
                         –
@@ -105,9 +106,8 @@ export function Heatmap({ rowHeader, rows, columns, cell }: HeatmapProps) {
                       // Light text only where the cell is dark enough for it.
                       className={fraction >= 0.65 ? 'heatmap__cell heatmap__cell--dark' : 'heatmap__cell'}
                       style={{ '--share': `${Math.round(fraction * 100)}%` } as CSSProperties}
-                      title={`${formatNumber(ratio.value)} of ${formatNumber(ratio.total)}`}
                     >
-                      {formatPercent(ratio)}
+                      <Figure ratio={counts} />
                     </td>
                   )
                 })}
@@ -178,11 +178,12 @@ export function Dumbbell({ labels, items }: DumbbellProps) {
                 {first !== null && <span className="dumbbell__dot dumbbell__dot--first" style={{ left: position(first) }} />}
               </span>
               <span className="dumbbell__values">
+                <span className="dumbbell__key dumbbell__key--first" aria-hidden="true" />
                 <span className="visually-hidden">{labels[0]} </span>
-                {formatPercent(item.first)}
-                <span aria-hidden="true"> · </span>
+                <Figure ratio={item.first} />
+                <span className="dumbbell__key dumbbell__key--second" aria-hidden="true" />
                 <span className="visually-hidden">, {labels[1]} </span>
-                {formatPercent(item.second)}
+                <Figure ratio={item.second} />
               </span>
             </li>
           )
@@ -199,8 +200,12 @@ interface StackedBarsProps {
   items: { key: string; label: string; values: number[]; emphasized?: boolean }[]
 }
 
-/** Each row split into its parts, as shares of the row total. */
+const sumOf = (values: number[]) => values.reduce((sum, value) => sum + value, 0)
+
+/** Each row split into its parts; each row's total also shows as a share of all rows. */
 export function StackedBars({ series, items }: StackedBarsProps) {
+  const grandTotal = sumOf(items.map((item) => sumOf(item.values)))
+
   return (
     <div className="stacked">
       <p className="chart-legend">
@@ -213,7 +218,7 @@ export function StackedBars({ series, items }: StackedBarsProps) {
       </p>
       <ol>
         {items.map((item) => {
-          const total = item.values.reduce((sum, value) => sum + value, 0)
+          const total = sumOf(item.values)
           return (
             <li key={item.key} className={item.emphasized ? 'stacked__row is-emphasized' : 'stacked__row'}>
               <span className="stacked__label">{item.label}</span>
@@ -229,7 +234,9 @@ export function StackedBars({ series, items }: StackedBarsProps) {
                   ) : null,
                 )}
               </span>
-              <span className="stacked__total">{formatNumber(total)}</span>
+              <span className="stacked__total">
+                <Figure ratio={ratio(total, grandTotal)} />
+              </span>
               <span className="visually-hidden">
                 {series.map((entry, index) => `${entry.label} ${formatNumber(item.values[index])}`).join(', ')}
               </span>

@@ -1,8 +1,9 @@
 import { ChevronRight } from 'lucide-react'
 import type { Ratio } from '../../api'
-import { formatDecimal, formatNumber, formatPercent } from '../../format'
+import { formatDecimal, formatNumber, formatPlaceName } from '../../format'
 import type { Column } from './charts'
-import { type Cell, type Counts, displayName, type Metrics, share, summarize } from './data'
+import { type Cell, type Counts, type Metrics, ratio, summarize } from './data'
+import { Figure } from './parts'
 
 /** One district, tehsil or division with its counts and figures. */
 export interface PlaceRow {
@@ -21,7 +22,7 @@ export function placeRows(cells: Cell[], divisionOf?: (place: string) => string)
   for (const cell of cells) byPlace.set(cell.place, [...(byPlace.get(cell.place) ?? []), cell])
   return [...byPlace].map(([key, group]) => ({
     key,
-    name: displayName(key),
+    name: formatPlaceName(key),
     division: divisionOf?.(key),
     ...summarize(group),
   }))
@@ -35,15 +36,16 @@ const count = (key: string, label: string, pick: (row: PlaceRow) => number): Col
   render: (row) => formatNumber(pick(row)),
 })
 
-const percent = (key: string, label: string, pick: (row: PlaceRow) => Ratio): Column<PlaceRow> => ({
+/** A count with its share in brackets, e.g. 134 (9.9%); sorts by the count, as that is the figure in front. */
+export const figure = (key: string, label: string, pick: (row: PlaceRow) => Ratio): Column<PlaceRow> => ({
   key,
   label,
   numeric: true,
-  sortValue: (row) => share(pick(row)),
-  render: (row) => {
-    const ratio = pick(row)
-    return <span title={`${formatNumber(ratio.value)} of ${formatNumber(ratio.total)}`}>{formatPercent(ratio)}</span>
+  sortValue: (row) => {
+    const { value, total } = pick(row)
+    return total ? value : null
   },
+  render: (row) => <Figure ratio={pick(row)} />,
 })
 
 const decimal = (key: string, label: string, pick: (row: PlaceRow) => number | null): Column<PlaceRow> => ({
@@ -57,7 +59,7 @@ const decimal = (key: string, label: string, pick: (row: PlaceRow) => number | n
   },
 })
 
-/** The table's column sets. Percentages are out of all schools unless the label names another base. */
+/** The table's column sets. Shares are out of all schools, or out of the students, labs, computers or IT teachers a column counts. */
 export const TABLE_VIEWS: { key: string; label: string; columns: Column<PlaceRow>[] }[] = [
   {
     key: 'overview',
@@ -65,24 +67,24 @@ export const TABLE_VIEWS: { key: string; label: string; columns: Column<PlaceRow
     columns: [
       count('schools', 'Schools', (row) => row.counts.schools),
       count('students', 'Students', (row) => row.metrics.students),
-      percent('labs', 'With IT lab', (row) => row.metrics.labCoverage),
-      percent('computer', 'With working computer', (row) => row.metrics.schoolsWithWorkingComputer),
-      percent('internet', 'With internet', (row) => row.metrics.schoolsWithInternet),
-      percent('teacher', 'With IT teacher', (row) => row.metrics.schoolsWithTeacher),
-      percent('reached', 'Students in lab schools', (row) => row.metrics.studentsReached),
+      figure('labs', 'With IT lab', (row) => row.metrics.labCoverage),
+      figure('computer', 'With working computer', (row) => row.metrics.schoolsWithWorkingComputer),
+      figure('internet', 'With internet', (row) => row.metrics.schoolsWithInternet),
+      figure('teacher', 'With IT teacher', (row) => row.metrics.schoolsWithTeacher),
+      figure('reached', 'Students in lab schools', (row) => row.metrics.studentsReached),
     ],
   },
   {
     key: 'labs',
     label: 'IT labs',
     columns: [
-      count('labCount', 'IT labs', (row) => row.counts.labs),
-      percent('secondary', 'Secondary schools with lab', (row) => row.metrics.secondaryLabCoverage),
+      figure('labCount', 'IT labs', (row) => row.metrics.labCoverage),
+      figure('secondary', 'Secondary schools with lab', (row) => row.metrics.secondaryLabCoverage),
       count('computers', 'Computers', (row) => row.counts.computers),
-      percent('working', 'Computers working', (row) => row.metrics.workingComputers),
-      percent('labWorking', 'Labs with working computer', (row) => row.metrics.labsWithWorkingComputer),
-      percent('labAllWorking', 'Labs with all working', (row) => row.metrics.labsAllComputersWorking),
-      percent('labInternet', 'Labs with internet', (row) => row.metrics.labsWithInternet),
+      figure('working', 'Computers working', (row) => row.metrics.workingComputers),
+      figure('labWorking', 'Labs with working computer', (row) => row.metrics.labsWithWorkingComputer),
+      figure('labAllWorking', 'Labs with all working', (row) => row.metrics.labsAllComputersWorking),
+      figure('labInternet', 'Labs with internet', (row) => row.metrics.labsWithInternet),
       decimal('perComputer', 'Class 6–12 per working computer', (row) => row.metrics.studentsPerWorkingLabComputer),
     ],
   },
@@ -91,14 +93,14 @@ export const TABLE_VIEWS: { key: string; label: string; columns: Column<PlaceRow
     label: 'IT teachers',
     columns: [
       count('teachers', 'IT teachers', (row) => row.counts.teachers),
-      count('schoolsWithTeacher', 'Schools with teacher', (row) => row.counts.schoolsWithTeacher),
-      percent('labTeacher', 'Labs with teacher', (row) => row.metrics.labsWithTeacher),
-      percent('posted', 'Posted to lab schools', (row) => row.metrics.teachersInLabSchools),
-      count('labsWithout', 'Labs without teacher', (row) => row.counts.labs - row.counts.labsWithTeacher),
-      count('noLab', 'Teacher but no lab', (row) => row.counts.schoolsWithTeacherButNoLab),
-      count('ct', 'CT (IT)', (row) => row.counts.teachersCt),
-      count('sst', 'SST (IT)', (row) => row.counts.teachersSst),
-      count('specialist', 'Subject Specialist', (row) => row.counts.teachersSubjectSpecialist),
+      figure('schoolsWithTeacher', 'Schools with teacher', (row) => row.metrics.schoolsWithTeacher),
+      figure('labTeacher', 'Labs with teacher', (row) => row.metrics.labsWithTeacher),
+      figure('posted', 'Posted to lab schools', (row) => row.metrics.teachersInLabSchools),
+      figure('labsWithout', 'Labs without teacher', (row) => ratio(row.counts.labs - row.counts.labsWithTeacher, row.counts.labs)),
+      figure('noLab', 'Teacher but no lab', (row) => ratio(row.counts.schoolsWithTeacherButNoLab, row.counts.schools)),
+      figure('ct', 'CT (IT)', (row) => ratio(row.counts.teachersCt, row.counts.teachers)),
+      figure('sst', 'SST (IT)', (row) => ratio(row.counts.teachersSst, row.counts.teachers)),
+      figure('specialist', 'Subject Specialist', (row) => ratio(row.counts.teachersSubjectSpecialist, row.counts.teachers)),
     ],
   },
   {
@@ -109,9 +111,10 @@ export const TABLE_VIEWS: { key: string; label: string; columns: Column<PlaceRow
       count('class1', 'Class 1', (row) => row.counts.enrollment[2]),
       count('class10', 'Class 10', (row) => row.counts.enrollment[11]),
       count('class12', 'Class 12', (row) => row.counts.enrollment[13]),
-      percent('retention', 'Class 10 of Class 1', (row) => row.metrics.classTenRetention),
-      count('empty', 'Schools with no students', (row) => row.counts.emptySchools),
-      count('small', 'Schools with 1–49', (row) => row.counts.smallSchools),
+      figure('retention', 'Class 10 of Class 1', (row) => row.metrics.classTenRetention),
+      // Out of the schools that reported enrollment, as on the summary cards.
+      figure('empty', 'Schools with no students', (row) => row.metrics.emptySchools),
+      figure('small', 'Schools with 1–49', (row) => row.metrics.smallSchools),
     ],
   },
   {
@@ -119,9 +122,9 @@ export const TABLE_VIEWS: { key: string; label: string; columns: Column<PlaceRow
     label: 'Data quality',
     columns: [
       count('schoolsAll', 'Schools', (row) => row.counts.schools),
-      percent('enrollmentReported', 'Enrollment reported', (row) => row.metrics.enrollmentReported),
-      percent('locationKnown', 'Location known', (row) => row.metrics.locationKnown),
-      percent('labStatus', 'IT lab status reported', (row) => row.metrics.labStatusReported),
+      figure('enrollmentReported', 'Enrollment reported', (row) => row.metrics.enrollmentReported),
+      figure('locationKnown', 'Location known', (row) => row.metrics.locationKnown),
+      figure('labStatus', 'IT lab status reported', (row) => row.metrics.labStatusReported),
     ],
   },
 ]

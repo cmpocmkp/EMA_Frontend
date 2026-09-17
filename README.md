@@ -33,15 +33,13 @@ Routing uses React Router 8. Every page except `/login` needs a signed-in user; 
 | Route | Page |
 | --- | --- |
 | `/login` | Sign-in |
-| `/map` | Khyber Pakhtunkhwa map: schools with an IT lab in green, without one in red, not reported in grey |
-| `/summary` | Filterable by division and district (kept in the URL). Four cards whose headlines are out of all schools or all students, a division scorecard and charts, district rankings, a gender comparison, a sortable district table with tehsil drill-down, and students by class. Everything is added up in the browser from one `GET /api/summary` response |
-| `/division` | Division (content to be decided) |
-| `/district` | District (content to be decided) |
+| `/map` | Khyber Pakhtunkhwa map: schools with an IT lab in green, without one in red, not reported in grey. Clicking a dot opens the school's name, district, tehsil, level, gender and IT lab status |
+| `/summary` | Filterable by division, district and tehsil (kept in the URL). Four cards whose headlines are out of all schools or all students, a division scorecard and charts, district rankings, a gender comparison, a sortable district table with tehsil drill-down, and students by class. Tables and charts show each count with its share in brackets, e.g. `134 (9.9%)`; hover a figure for its base. Everything is added up in the browser from one `GET /api/summary` response, plus `GET /api/summary/tehsils` for the chosen district |
 | `/users` | List of users and an Add user dialog |
 
 The layout adapts to the screen: a glass sidebar from 1200px, an icon rail from 768px, and a floating tab bar at the bottom on phones.
 
-The map page loads Mapbox GL only when it is first opened. School points come from `GET /api/map/schools` once per page load; the browser revalidates them with the API's ETag, so repeat visits transfer nothing until the next data sync. The map instance is reused between visits, since each new one counts as a Mapbox map load.
+The map page loads Mapbox GL only when it is first opened. School points come from `GET /api/map/schools` once per page load; the browser revalidates them with the API's ETag, so repeat visits transfer nothing until the next data sync. The map instance is reused between visits, since each new one counts as a Mapbox map load. A school's details are fetched from `GET /api/map/schools/:emisCode` only when its dot is clicked, once per page load.
 
 ## Sign-in
 

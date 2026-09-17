@@ -165,3 +165,121 @@
     left: 0;
   }
 }
+
+/* School details popup, above the legend and zoom controls that float over the map */
+
+.school-popup {
+  z-index: 6;
+}
+
+.school-popup .mapboxgl-popup-content {
+  min-width: 230px;
+  padding: 14px 16px 12px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  background: rgb(250 250 252 / 0.92);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* The tip points at the dot from whichever side Mapbox placed the popup. */
+.school-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.school-popup.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.school-popup.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+  border-top-color: rgb(250 250 252 / 0.92);
+}
+
+.school-popup.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.school-popup.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.school-popup.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+  border-bottom-color: rgb(250 250 252 / 0.92);
+}
+
+.school-popup.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+  border-right-color: rgb(250 250 252 / 0.92);
+}
+
+.school-popup.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+  border-left-color: rgb(250 250 252 / 0.92);
+}
+
+.school-popup__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.school-popup__header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.school-popup__close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -4px -6px 0 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ink-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.school-popup__close:hover {
+  color: var(--ink);
+  background: rgb(144 144 145 / 0.18);
+}
+
+.school-popup__close:focus-visible {
+  outline: 2px solid rgb(121 121 122 / 0.6);
+  outline-offset: 1px;
+}
+
+.school-popup__message {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.school-popup__facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.school-popup__facts > div {
+  display: grid;
+  grid-template-columns: 5.5em 1fr;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.school-popup__facts dt {
+  color: var(--ink-muted);
+}
+
+.school-popup__facts dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: 550;
+}
+
+.school-popup__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(99 99 100 / 0.35);
+}
