@@ -1,16 +1,20 @@
 import { formatNumber } from '../../format'
 import { ratioRow } from './chart-tooltip'
 import { BarList, type Column, DataTable, Dumbbell, Heatmap, StackedBars } from './charts'
-import { add, type Cell, type Division, GENDERS, LEVELS, ratio, share, summarize } from './data'
+import {
+  add,
+  type Cell,
+  DESIGNATIONS,
+  designationCounts,
+  type Division,
+  GENDERS,
+  LEVELS,
+  ratio,
+  share,
+  summarize,
+} from './data'
 import { Figure, Panel } from './parts'
 import { figure, nameColumn, type PlaceRow } from './places'
-
-// An ordinal grey scale, junior to senior post; checked for step contrast against the glass surface.
-const DESIGNATIONS = [
-  { key: 'ct', label: 'CT (IT)', color: '#9e9ea2' },
-  { key: 'sst', label: 'SST (IT)', color: '#707074' },
-  { key: 'specialist', label: 'Subject Specialist (IT)', color: '#3f3f42' },
-]
 
 const scorecardColumns: Column<PlaceRow>[] = [
   nameColumn('Division'),
@@ -162,11 +166,12 @@ export default function DivisionSection({ cells, divisions, selected }: Division
         >
           <StackedBars
             unit="IT teachers"
+            scope="Khyber Pakhtunkhwa"
             series={DESIGNATIONS}
             items={rows.map((row) => ({
               key: row.key,
               label: row.name,
-              values: [row.counts.teachersCt, row.counts.teachersSst, row.counts.teachersSubjectSpecialist],
+              values: designationCounts(row.counts),
               emphasized: row.key === selected,
             }))}
           />

@@ -242,6 +242,8 @@ interface StackedBarsProps {
   items: { key: string; label: string; values: number[]; emphasized?: boolean }[]
   /** What the bars count, e.g. "IT teachers". */
   unit: string
+  /** Where all the rows together are, for the tooltip, e.g. "Khyber Pakhtunkhwa". */
+  scope: string
 }
 
 const sumOf = (values: number[]) => values.reduce((sum, value) => sum + value, 0)
@@ -250,7 +252,7 @@ const sumOf = (values: number[]) => values.reduce((sum, value) => sum + value, 0
  * Each row split into its parts; each row's total also shows as a share of all rows. Hovering a row
  * lists every part with its count, marking the segment under the pointer.
  */
-export function StackedBars({ series, items, unit }: StackedBarsProps) {
+export function StackedBars({ series, items, unit, scope }: StackedBarsProps) {
   const tooltip = useChartTooltip()
   const grandTotal = sumOf(items.map((item) => sumOf(item.values)))
   const activeSeries = tooltip.placement?.tip.rows.find((row) => row.active)?.key
@@ -269,7 +271,7 @@ export function StackedBars({ series, items, unit }: StackedBarsProps) {
           label: entry.label,
           active: entry.key === hovered,
         })),
-        note: `${formatNumber(total)} ${unit}, ${formatPercent(ratio(total, grandTotal))} of all ${unit}`,
+        note: `${formatNumber(total)} ${unit}, ${formatPercent(ratio(total, grandTotal))} of all ${unit} in ${scope}`,
       }
     }
 

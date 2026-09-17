@@ -3,8 +3,21 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, type Ratio } from '../../api'
 import { formatDecimal, formatNumber } from '../../format'
 import { ratioRow, type Tip, type TipRow } from './chart-tooltip'
-import { type BarItem, BarList, DataTable, Dumbbell } from './charts'
-import { add, type Cell, type Counts, type Division, GENDERS, type Metrics, ratio, share, summarize, toCells } from './data'
+import { type BarItem, BarList, DataTable, Dumbbell, StackedBars } from './charts'
+import {
+  add,
+  type Cell,
+  type Counts,
+  DESIGNATIONS,
+  designationCounts,
+  type Division,
+  GENDERS,
+  type Metrics,
+  ratio,
+  share,
+  summarize,
+  toCells,
+} from './data'
 import { Figure, Panel, Segmented } from './parts'
 import { divisionColumn, nameColumn, type PlaceRow, placeRows, TABLE_VIEWS } from './places'
 import { loadTehsils } from './tehsils'
@@ -185,6 +198,14 @@ export default function DistrictSection(props: DistrictSectionProps) {
     })
     .sort((a, b) => a.gap - b.gap)
 
+  // Most IT teachers first.
+  const teachers = rows
+    .map((row) => {
+      const values = designationCounts(row.counts)
+      return { row, values, total: values.reduce((sum, value) => sum + value, 0) }
+    })
+    .sort((a, b) => b.total - a.total || a.row.name.localeCompare(b.row.name))
+
   const view = TABLE_VIEWS.find((entry) => entry.key === viewKey) ?? TABLE_VIEWS[0]
   const needle = query.trim().toLowerCase()
   const tableRows = needle ? rows.filter((row) => row.name.toLowerCase().includes(needle)) : rows
@@ -239,6 +260,24 @@ export default function DistrictSection(props: DistrictSectionProps) {
               label: row.name,
               first,
               second,
+              emphasized: row.key === district,
+            }))}
+          />
+        </Panel>
+
+        <Panel
+          wide
+          title="IT teachers by designation, by district"
+          description={`IT teachers in each district, most first, with their share of all IT teachers in ${scopeLabel} in brackets. Hover or tap a bar for each designation.`}
+        >
+          <StackedBars
+            unit="IT teachers"
+            scope={scopeLabel}
+            series={DESIGNATIONS}
+            items={teachers.map(({ row, values }) => ({
+              key: row.key,
+              label: row.name,
+              values,
               emphasized: row.key === district,
             }))}
           />

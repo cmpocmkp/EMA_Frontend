@@ -4,6 +4,13 @@ export const LEVELS = ['Primary', 'Middle', 'High', 'Higher Secondary', 'Mosque'
 const SECONDARY_LEVELS = new Set(['High', 'Higher Secondary'])
 export const GENDERS = ['Girls', 'Boys']
 export const CLASSES = ['Nursery', 'Prep', ...Array.from({ length: 12 }, (_, index) => `Class ${index + 1}`)]
+
+// IT teacher posts on an ordinal grey scale, junior to senior; checked for step contrast against the glass surface.
+export const DESIGNATIONS = [
+  { key: 'ct', label: 'CT (IT)', color: '#9e9ea2' },
+  { key: 'sst', label: 'SST (IT)', color: '#707074' },
+  { key: 'specialist', label: 'Subject Specialist (IT)', color: '#3f3f42' },
+]
 const CLASS_1 = 2
 const CLASS_6 = 7
 const CLASS_10 = 11
@@ -79,6 +86,13 @@ export function addBy(cells: Cell[], keyOf: (cell: Cell) => string, order: strin
 }
 
 export const isSecondary = (cell: Cell) => SECONDARY_LEVELS.has(cell.level)
+
+/** IT teachers per post, in DESIGNATIONS order. */
+export const designationCounts = (counts: Counts) => [
+  counts.teachersCt,
+  counts.teachersSst,
+  counts.teachersSubjectSpecialist,
+]
 
 const sum = (numbers: number[]) => numbers.reduce((total, value) => total + value, 0)
 
