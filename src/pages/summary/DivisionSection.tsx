@@ -1,4 +1,5 @@
 import { formatNumber } from '../../format'
+import { ratioRow } from './chart-tooltip'
 import { BarList, type Column, DataTable, Dumbbell, Heatmap, StackedBars } from './charts'
 import { add, type Cell, type Division, GENDERS, LEVELS, ratio, share, summarize } from './data'
 import { Figure, Panel } from './parts'
@@ -105,7 +106,11 @@ export default function DivisionSection({ cells, divisions, selected }: Division
               key: row.key,
               label: row.name,
               value,
-              display: <Figure ratio={row.metrics.labCoverage} />,
+              display: <Figure ratio={row.metrics.labCoverage} baseOnHover={false} />,
+              tip: {
+                title: row.name,
+                rows: [ratioRow('labs', row.metrics.labCoverage, (total) => `of ${total} schools have an IT lab`)],
+              },
               emphasized: row.key === selected,
             }))}
             max={Math.max(provinceCoverage, ...coverage.map(({ value }) => value))}
@@ -129,12 +134,15 @@ export default function DivisionSection({ cells, divisions, selected }: Division
               const counts = byDivisionLevel.get(`${division}|${level}`)
               return counts && counts.schools ? ratio(counts.labs, counts.schools) : null
             }}
+            describe={(total) => `of ${total} schools have an IT lab`}
+            emptyNote="No schools of this level"
           />
         </Panel>
 
         <Panel title="Girls' and boys' schools with an IT lab" description="Out of all girls' schools and all boys' schools in each division">
           <Dumbbell
             labels={["Girls' schools", "Boys' schools"]}
+            measure="have an IT lab"
             items={groups.map((group) => {
               const [girls, boys] = GENDERS.map((gender) => add(group.cells.filter((cell) => cell.gender === gender)))
               return {
@@ -150,9 +158,10 @@ export default function DivisionSection({ cells, divisions, selected }: Division
 
         <Panel
           title="IT teachers by designation"
-          description="IT teachers in each division, with their share of all IT teachers in brackets"
+          description="IT teachers in each division, with their share of all IT teachers in brackets. Hover or tap a bar for each designation."
         >
           <StackedBars
+            unit="IT teachers"
             series={DESIGNATIONS}
             items={rows.map((row) => ({
               key: row.key,

@@ -61,11 +61,17 @@ export function RatioRow({ label, ratio }: { label: string; ratio: Ratio }) {
   )
 }
 
-/** A count with its share after it in small type, e.g. 134 (9.9%); hovering shows the base. */
-export function Figure({ ratio }: { ratio: Ratio }) {
+/**
+ * A count with its share after it in small type, e.g. 134 (9.9%). Hovering shows the base, unless the
+ * figure sits on a chart mark whose own tooltip already says it.
+ */
+export function Figure({ ratio, baseOnHover = true }: { ratio: Ratio; baseOnHover?: boolean }) {
   if (!ratio.total) return <span className="figure">–</span>
   return (
-    <span className="figure" title={`${formatNumber(ratio.value)} of ${formatNumber(ratio.total)}`}>
+    <span
+      className="figure"
+      title={baseOnHover ? `${formatNumber(ratio.value)} of ${formatNumber(ratio.total)}` : undefined}
+    >
       {formatNumber(ratio.value)}{' '}
       <small className="figure__share">({formatPercent(ratio)})</small>
     </span>

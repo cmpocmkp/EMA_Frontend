@@ -2,6 +2,8 @@ import { ArrowDown, ArrowUp } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useMemo, useState } from 'react'
 import type { Ratio } from '../../api'
 import { formatCompact, formatNumber, formatPercent } from '../../format'
+import { ratioRow, type Tip, useChartTooltip } from './chart-tooltip'
+import { ChartTooltip } from './ChartTooltip'
 import { ratio, share } from './data'
 import { Figure } from './parts'
 
@@ -14,6 +16,8 @@ export interface BarItem {
   value: number
   /** Shown after the bar. */
   display: ReactNode
+  /** Shown on hover, tap or keyboard focus. */
+  tip: Tip
   emphasized?: boolean
 }
 
@@ -25,20 +29,23 @@ interface BarListProps {
 }
 
 export function BarList({ items, max, reference }: BarListProps) {
+  const tooltip = useChartTooltip()
   const anyEmphasized = items.some((item) => item.emphasized)
   const position = (value: number) => `${max ? Math.min(100, (value / max) * 100) : 0}%`
 
   return (
     <div className="bar-list">
-      <ol>
-        {items.map((item) => (
+      <ol onKeyDown={tooltip.onKeyDown}>
+        {items.map((item, index) => (
           <li
             key={item.key}
             className={[
               'bar-list__item',
               item.emphasized ? 'is-emphasized' : '',
               anyEmphasized && !item.emphasized ? 'is-muted' : '',
+              tooltip.activeIndex === index ? 'is-hovered' : '',
             ].join(' ')}
+            {...tooltip.itemProps(index, item.tip)}
           >
             <span className="bar-list__label">{item.label}</span>
             <span className="bar-list__track" aria-hidden="true">
@@ -57,6 +64,7 @@ export function BarList({ items, max, reference }: BarListProps) {
           </span>
         </p>
       )}
+      <ChartTooltip id={tooltip.id} placement={tooltip.placement} />
     </div>
   )
 }
@@ -68,14 +76,20 @@ interface HeatmapProps {
   rows: { key: string; label: string; emphasized?: boolean }[]
   columns: { key: string; label: string }[]
   cell: (rowKey: string, columnKey: string) => Ratio | null
+  /** Completes a cell's tooltip after its count and share, given the base, e.g. "of 473 schools have an IT lab". */
+  describe: (total: string) => string
+  /** A cell's tooltip when it has nothing to count. */
+  emptyNote: string
 }
 
 /** Shares on a single-hue scale: the darker the cell, the higher the share. */
-export function Heatmap({ rowHeader, rows, columns, cell }: HeatmapProps) {
+export function Heatmap({ rowHeader, rows, columns, cell, describe, emptyNote }: HeatmapProps) {
+  const tooltip = useChartTooltip(columns.length)
+
   return (
     <div className="heatmap">
       <div className="table-scroll">
-        <table>
+        <table onKeyDown={tooltip.onKeyDown}>
           <thead>
             <tr>
               <th scope="col">{rowHeader}</th>
@@ -87,15 +101,22 @@ export function Heatmap({ rowHeader, rows, columns, cell }: HeatmapProps) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {rows.map((row, rowIndex) => (
               <tr key={row.key} className={row.emphasized ? 'is-emphasized' : undefined}>
                 <th scope="row">{row.label}</th>
-                {columns.map((column) => {
+                {columns.map((column, columnIndex) => {
                   const counts = cell(row.key, column.key)
                   const fraction = counts ? share(counts) : null
+                  const index = rowIndex * columns.length + columnIndex
+                  const title = `${row.label} · ${column.label}`
+                  const hovered = tooltip.activeIndex === index ? ' is-hovered' : ''
                   if (fraction === null || !counts) {
                     return (
-                      <td key={column.key} className="heatmap__cell heatmap__cell--empty">
+                      <td
+                        key={column.key}
+                        className={`heatmap__cell heatmap__cell--empty${hovered}`}
+                        {...tooltip.itemProps(index, { title, rows: [], note: emptyNote })}
+                      >
                         –
                       </td>
                     )
@@ -104,10 +125,11 @@ export function Heatmap({ rowHeader, rows, columns, cell }: HeatmapProps) {
                     <td
                       key={column.key}
                       // Light text only where the cell is dark enough for it.
-                      className={fraction >= 0.65 ? 'heatmap__cell heatmap__cell--dark' : 'heatmap__cell'}
+                      className={`heatmap__cell${fraction >= 0.65 ? ' heatmap__cell--dark' : ''}${hovered}`}
                       style={{ '--share': `${Math.round(fraction * 100)}%` } as CSSProperties}
+                      {...tooltip.itemProps(index, { title, rows: [ratioRow(column.key, counts, describe)] })}
                     >
-                      <Figure ratio={counts} />
+                      <Figure ratio={counts} baseOnHover={false} />
                     </td>
                   )
                 })}
@@ -116,6 +138,7 @@ export function Heatmap({ rowHeader, rows, columns, cell }: HeatmapProps) {
           </tbody>
         </table>
       </div>
+      <ChartTooltip id={tooltip.id} placement={tooltip.placement} />
       <p className="chart-legend">
         <span className="chart-legend__item">
           0%
@@ -132,6 +155,8 @@ export function Heatmap({ rowHeader, rows, columns, cell }: HeatmapProps) {
 interface DumbbellProps {
   /** Names of the two compared groups, e.g. girls' and boys' schools. */
   labels: [string, string]
+  /** What each share measures, ending the tooltip lines, e.g. "have an IT lab". */
+  measure: string
   items: { key: string; label: string; first: Ratio; second: Ratio; emphasized?: boolean }[]
 }
 
@@ -141,11 +166,19 @@ function axisMax(largest: number) {
 }
 
 /** Two shares per row on a shared track from 0; the first is a filled dot, the second a ring. */
-export function Dumbbell({ labels, items }: DumbbellProps) {
+export function Dumbbell({ labels, measure, items }: DumbbellProps) {
+  const tooltip = useChartTooltip()
   const max = axisMax(
     Math.max(0, ...items.flatMap((item) => [share(item.first) ?? 0, share(item.second) ?? 0])),
   )
   const position = (value: number | null) => (value === null ? undefined : `${(value / max) * 100}%`)
+  const tipFor = (item: DumbbellProps['items'][number]): Tip => ({
+    title: item.label,
+    rows: [
+      { ...ratioRow('first', item.first, (total) => `of ${total} ${labels[0].toLowerCase()} ${measure}`), marker: 'dot' },
+      { ...ratioRow('second', item.second, (total) => `of ${total} ${labels[1].toLowerCase()} ${measure}`), marker: 'ring' },
+    ],
+  })
 
   return (
     <div className="dumbbell">
@@ -160,12 +193,20 @@ export function Dumbbell({ labels, items }: DumbbellProps) {
         </span>
         <span className="chart-legend__item">Track runs from 0% to {max * 100}%</span>
       </p>
-      <ol>
-        {items.map((item) => {
+      <ol onKeyDown={tooltip.onKeyDown}>
+        {items.map((item, index) => {
           const first = share(item.first)
           const second = share(item.second)
           return (
-            <li key={item.key} className={item.emphasized ? 'dumbbell__row is-emphasized' : 'dumbbell__row'}>
+            <li
+              key={item.key}
+              className={[
+                'dumbbell__row',
+                item.emphasized ? 'is-emphasized' : '',
+                tooltip.activeIndex === index ? 'is-hovered' : '',
+              ].join(' ')}
+              {...tooltip.itemProps(index, tipFor(item))}
+            >
               <span className="dumbbell__label">{item.label}</span>
               <span className="dumbbell__track" aria-hidden="true">
                 {first !== null && second !== null && (
@@ -180,15 +221,16 @@ export function Dumbbell({ labels, items }: DumbbellProps) {
               <span className="dumbbell__values">
                 <span className="dumbbell__key dumbbell__key--first" aria-hidden="true" />
                 <span className="visually-hidden">{labels[0]} </span>
-                <Figure ratio={item.first} />
+                <Figure ratio={item.first} baseOnHover={false} />
                 <span className="dumbbell__key dumbbell__key--second" aria-hidden="true" />
                 <span className="visually-hidden">, {labels[1]} </span>
-                <Figure ratio={item.second} />
+                <Figure ratio={item.second} baseOnHover={false} />
               </span>
             </li>
           )
         })}
       </ol>
+      <ChartTooltip id={tooltip.id} placement={tooltip.placement} />
     </div>
   )
 }
@@ -198,13 +240,38 @@ export function Dumbbell({ labels, items }: DumbbellProps) {
 interface StackedBarsProps {
   series: { key: string; label: string; color: string }[]
   items: { key: string; label: string; values: number[]; emphasized?: boolean }[]
+  /** What the bars count, e.g. "IT teachers". */
+  unit: string
 }
 
 const sumOf = (values: number[]) => values.reduce((sum, value) => sum + value, 0)
 
-/** Each row split into its parts; each row's total also shows as a share of all rows. */
-export function StackedBars({ series, items }: StackedBarsProps) {
+/**
+ * Each row split into its parts; each row's total also shows as a share of all rows. Hovering a row
+ * lists every part with its count, marking the segment under the pointer.
+ */
+export function StackedBars({ series, items, unit }: StackedBarsProps) {
+  const tooltip = useChartTooltip()
   const grandTotal = sumOf(items.map((item) => sumOf(item.values)))
+  const activeSeries = tooltip.placement?.tip.rows.find((row) => row.active)?.key
+
+  const tipFor =
+    (item: StackedBarsProps['items'][number], total: number) =>
+    (target: Element): Tip => {
+      const hovered = target.closest<HTMLElement>('[data-series]')?.dataset.series
+      return {
+        title: item.label,
+        rows: series.map((entry, index) => ({
+          key: entry.key,
+          color: entry.color,
+          value: formatNumber(item.values[index]),
+          share: total ? `(${formatPercent(ratio(item.values[index], total))})` : undefined,
+          label: entry.label,
+          active: entry.key === hovered,
+        })),
+        note: `${formatNumber(total)} ${unit}, ${formatPercent(ratio(total, grandTotal))} of all ${unit}`,
+      }
+    }
 
   return (
     <div className="stacked">
@@ -216,26 +283,31 @@ export function StackedBars({ series, items }: StackedBarsProps) {
           </span>
         ))}
       </p>
-      <ol>
-        {items.map((item) => {
+      <ol onKeyDown={tooltip.onKeyDown}>
+        {items.map((item, rowIndex) => {
           const total = sumOf(item.values)
+          const hovered = tooltip.activeIndex === rowIndex
           return (
-            <li key={item.key} className={item.emphasized ? 'stacked__row is-emphasized' : 'stacked__row'}>
+            <li
+              key={item.key}
+              className={['stacked__row', item.emphasized ? 'is-emphasized' : '', hovered ? 'is-hovered' : ''].join(' ')}
+              {...tooltip.itemProps(rowIndex, tipFor(item, total))}
+            >
               <span className="stacked__label">{item.label}</span>
               <span className="stacked__bar" aria-hidden="true">
                 {item.values.map((value, index) =>
                   value > 0 ? (
                     <span
                       key={series[index].key}
-                      className="stacked__segment"
+                      data-series={series[index].key}
+                      className={hovered && activeSeries === series[index].key ? 'stacked__segment is-active' : 'stacked__segment'}
                       style={{ flexGrow: value, background: series[index].color }}
-                      title={`${series[index].label}: ${formatNumber(value)} (${formatPercent({ value, total })})`}
                     />
                   ) : null,
                 )}
               </span>
               <span className="stacked__total">
-                <Figure ratio={ratio(total, grandTotal)} />
+                <Figure ratio={ratio(total, grandTotal)} baseOnHover={false} />
               </span>
               <span className="visually-hidden">
                 {series.map((entry, index) => `${entry.label} ${formatNumber(item.values[index])}`).join(', ')}
@@ -244,6 +316,7 @@ export function StackedBars({ series, items }: StackedBarsProps) {
           )
         })}
       </ol>
+      <ChartTooltip id={tooltip.id} placement={tooltip.placement} />
     </div>
   )
 }
@@ -263,10 +336,12 @@ interface ColumnChartProps {
   items: { key: string; label: string; shortLabel: string; value: number }[]
 }
 
-/** Columns on a shared axis; hover or focus a column to read its exact value. */
+/** Columns on a shared axis; hover, tap or focus a column for its count and share of the total. */
 export function ColumnChart({ unit, items }: ColumnChartProps) {
+  const tooltip = useChartTooltip()
   const axis = ticks(Math.max(1, ...items.map((item) => item.value)))
   const top = axis[axis.length - 1]
+  const total = sumOf(items.map((item) => item.value))
 
   return (
     <div className="columns">
@@ -278,19 +353,18 @@ export function ColumnChart({ unit, items }: ColumnChartProps) {
             </span>
           ))}
         </div>
-        <ol className="columns__bars">
-          {items.map((item) => (
+        <ol className="columns__bars" onKeyDown={tooltip.onKeyDown}>
+          {items.map((item, index) => (
             <li
               key={item.key}
-              className="columns__item"
-              tabIndex={0}
+              className={tooltip.activeIndex === index ? 'columns__item is-hovered' : 'columns__item'}
               aria-label={`${item.label}: ${formatNumber(item.value)} ${unit}`}
+              {...tooltip.itemProps(index, {
+                title: item.label,
+                rows: [ratioRow(item.key, ratio(item.value, total), (all) => `of ${all} ${unit}`)],
+              })}
             >
               <span className="columns__bar" style={{ height: `${(item.value / top) * 100}%` }} />
-              <span className="columns__tip" aria-hidden="true">
-                {item.label}
-                <strong>{formatNumber(item.value)}</strong>
-              </span>
               <span className="columns__label" aria-hidden="true">
                 {item.shortLabel}
               </span>
@@ -298,6 +372,7 @@ export function ColumnChart({ unit, items }: ColumnChartProps) {
           ))}
         </ol>
       </div>
+      <ChartTooltip id={tooltip.id} placement={tooltip.placement} />
     </div>
   )
 }

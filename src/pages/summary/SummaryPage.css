@@ -814,11 +814,6 @@
   justify-content: center;
   height: 100%;
   border-radius: 6px;
-  outline: none;
-}
-
-.columns__item:focus-visible {
-  box-shadow: 0 0 0 2px rgb(121 121 122 / 0.6);
 }
 
 .columns__bar {
@@ -827,8 +822,7 @@
   background: var(--pearl-900);
 }
 
-.columns__item:hover .columns__bar,
-.columns__item:focus-visible .columns__bar {
+.columns__item.is-hovered .columns__bar {
   background: var(--ink);
 }
 
@@ -841,42 +835,154 @@
   color: var(--ink-muted);
 }
 
-.columns__tip {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  z-index: 2;
-  display: none;
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  color: var(--ink-muted);
-  background: rgb(255 255 255 / 0.96);
-  box-shadow: 0 6px 18px rgb(99 99 100 / 0.25);
-  transform: translate(-50%, calc(-100% - 6px));
+/* Chart hover ------------------------------------------------------------------------------------ */
+
+/* Marks answer hover, tap and keyboard focus: the row under the pointer gets a light wash. */
+
+.bar-list__item,
+.stacked__row,
+.dumbbell__row {
+  position: relative;
 }
 
-.columns__tip strong {
-  display: block;
-  font-size: 0.9rem;
+.bar-list__item::before,
+.stacked__row::before,
+.dumbbell__row::before {
+  content: '';
+  position: absolute;
+  inset: -3px -8px;
+  z-index: -1;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.bar-list__item.is-hovered::before,
+.stacked__row.is-hovered::before,
+.dumbbell__row.is-hovered::before {
+  background: rgb(255 255 255 / 0.55);
+}
+
+.bar-list__item.is-hovered .bar-list__bar {
+  background: var(--ink);
+}
+
+/* The designation under the pointer, matching the highlighted line in the tooltip */
+.stacked__segment.is-active {
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.85);
+}
+
+.heatmap__cell.is-hovered {
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+[data-chart-item] {
+  outline: none;
+}
+
+[data-chart-item]:focus-visible {
+  outline: 2px solid rgb(121 121 122 / 0.7);
+  outline-offset: 3px;
+}
+
+/* The tooltip is placed on the page body, fixed to the window. */
+
+.chart-tooltip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 16px));
+  padding: 10px 12px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--ink);
+  background: rgb(250 250 252 / 0.95);
+  box-shadow:
+    0 12px 32px rgb(99 99 100 / 0.24),
+    0 1px 3px rgb(99 99 100 / 0.14);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  pointer-events: none;
+}
+
+.chart-tooltip__title {
+  margin-bottom: 6px;
+  font-weight: 650;
+}
+
+.chart-tooltip__rows {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chart-tooltip__rows--keyed {
+  grid-template-columns: auto auto minmax(0, 1fr);
+}
+
+.chart-tooltip__row {
+  display: contents;
+}
+
+/* Series keys are short strokes in the series colour; dumbbell groups use their dot and ring. */
+.chart-tooltip__key {
+  align-self: center;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.chart-tooltip__key--dot,
+.chart-tooltip__key--ring {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.chart-tooltip__key--dot {
+  background: var(--ink);
+}
+
+.chart-tooltip__key--ring {
+  border: 2px solid var(--pearl-900);
+  background: #fff;
+}
+
+.chart-tooltip__value {
+  justify-self: end;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chart-tooltip__share {
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.chart-tooltip__label {
+  color: var(--ink-muted);
+}
+
+.chart-tooltip__row.is-active .chart-tooltip__value,
+.chart-tooltip__row.is-active .chart-tooltip__label {
+  font-weight: 700;
   color: var(--ink);
 }
 
-.columns__item:hover .columns__tip,
-.columns__item:focus-visible .columns__tip {
-  display: block;
-}
-
-.columns__item:first-child .columns__tip {
-  left: 0;
-  transform: translate(0, calc(-100% - 6px));
-}
-
-.columns__item:last-child .columns__tip {
-  right: 0;
-  left: auto;
-  transform: translate(0, calc(-100% - 6px));
+.chart-tooltip__note {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgb(144 144 145 / 0.25);
+  color: var(--ink-muted);
 }
 
 /* Tables --------------------------------------------------------------------------------------- */

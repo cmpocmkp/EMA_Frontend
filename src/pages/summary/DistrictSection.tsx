@@ -1,43 +1,121 @@
 import { Search, X } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, type Ratio } from '../../api'
-import { formatDecimal } from '../../format'
+import { formatDecimal, formatNumber } from '../../format'
+import { ratioRow, type Tip, type TipRow } from './chart-tooltip'
 import { type BarItem, BarList, DataTable, Dumbbell } from './charts'
-import { add, type Cell, type Division, GENDERS, type Metrics, ratio, share, summarize, toCells } from './data'
+import { add, type Cell, type Counts, type Division, GENDERS, type Metrics, ratio, share, summarize, toCells } from './data'
 import { Figure, Panel, Segmented } from './parts'
 import { divisionColumn, nameColumn, type PlaceRow, placeRows, TABLE_VIEWS } from './places'
 import { loadTehsils } from './tehsils'
 
-interface Ranking {
-  key: string
-  label: string
-  /** Share metrics show as percentages; others as whole numbers. */
-  ratio?: (metrics: Metrics) => Ratio
-  value?: (metrics: Metrics) => number | null
-}
+/** Share rankings show a count with its share; the rest show a whole number. */
+type Ranking = { key: string; label: string } & (
+  | {
+      ratio: (metrics: Metrics) => Ratio
+      /** Completes the tooltip after the count and share, given the base. */
+      describe: (total: string) => string
+    }
+  | {
+      value: (metrics: Metrics) => number | null
+      /** The counts behind the number, for the tooltip. */
+      details: (counts: Counts) => TipRow[]
+    }
+)
 
 const RANKINGS: Ranking[] = [
-  { key: 'labs', label: 'Schools with an IT lab', ratio: (m) => m.labCoverage },
-  { key: 'computer', label: 'Schools with a working computer', ratio: (m) => m.schoolsWithWorkingComputer },
-  { key: 'internet', label: 'Schools with internet', ratio: (m) => m.schoolsWithInternet },
-  { key: 'teacher', label: 'Schools with an IT teacher', ratio: (m) => m.schoolsWithTeacher },
-  { key: 'reached', label: 'Students in schools with an IT lab', ratio: (m) => m.studentsReached },
-  { key: 'secondary', label: 'Secondary schools with an IT lab', ratio: (m) => m.secondaryLabCoverage },
-  { key: 'working', label: 'Computers that work', ratio: (m) => m.workingComputers },
-  { key: 'retention', label: 'Class 10 students as a share of Class 1', ratio: (m) => m.classTenRetention },
-  { key: 'small', label: 'Schools with 1 to 49 students', ratio: (m) => m.smallSchools },
-  { key: 'perComputer', label: 'Class 6–12 students per working lab computer', value: (m) => m.studentsPerWorkingLabComputer },
+  {
+    key: 'labs',
+    label: 'Schools with an IT lab',
+    ratio: (m) => m.labCoverage,
+    describe: (total) => `of ${total} schools have an IT lab`,
+  },
+  {
+    key: 'computer',
+    label: 'Schools with a working computer',
+    ratio: (m) => m.schoolsWithWorkingComputer,
+    describe: (total) => `of ${total} schools have a working computer`,
+  },
+  {
+    key: 'internet',
+    label: 'Schools with internet',
+    ratio: (m) => m.schoolsWithInternet,
+    describe: (total) => `of ${total} schools have internet`,
+  },
+  {
+    key: 'teacher',
+    label: 'Schools with an IT teacher',
+    ratio: (m) => m.schoolsWithTeacher,
+    describe: (total) => `of ${total} schools have an IT teacher`,
+  },
+  {
+    key: 'reached',
+    label: 'Students in schools with an IT lab',
+    ratio: (m) => m.studentsReached,
+    describe: (total) => `of ${total} students are in schools with an IT lab`,
+  },
+  {
+    key: 'secondary',
+    label: 'Secondary schools with an IT lab',
+    ratio: (m) => m.secondaryLabCoverage,
+    describe: (total) => `of ${total} secondary schools have an IT lab`,
+  },
+  {
+    key: 'working',
+    label: 'Computers that work',
+    ratio: (m) => m.workingComputers,
+    describe: (total) => `of ${total} computers work`,
+  },
+  {
+    key: 'retention',
+    label: 'Class 10 students as a share of Class 1',
+    ratio: (m) => m.classTenRetention,
+    describe: (total) => `students in Class 10, against ${total} in Class 1`,
+  },
+  {
+    key: 'small',
+    label: 'Schools with 1 to 49 students',
+    ratio: (m) => m.smallSchools,
+    describe: (total) => `of ${total} schools reporting enrollment have 1 to 49 students`,
+  },
+  {
+    key: 'perComputer',
+    label: 'Class 6–12 students per working lab computer',
+    value: (m) => m.studentsPerWorkingLabComputer,
+    details: (counts) => [
+      {
+        key: 'students',
+        value: formatNumber(counts.classSixToTwelveInLabSchools),
+        label: 'Class 6–12 students in schools with an IT lab',
+      },
+      { key: 'computers', value: formatNumber(counts.labWorkingComputers), label: 'working computers in IT labs' },
+    ],
+  },
 ]
 
 function rankingValue(ranking: Ranking, metrics: Metrics) {
-  return ranking.ratio ? share(ranking.ratio(metrics)) : (ranking.value?.(metrics) ?? null)
+  return 'ratio' in ranking ? share(ranking.ratio(metrics)) : ranking.value(metrics)
 }
 
 /** Share rankings show the count with its share in brackets; the bars themselves are the shares. */
 function rankingDisplay(ranking: Ranking, metrics: Metrics): ReactNode {
-  if (ranking.ratio) return <Figure ratio={ranking.ratio(metrics)} />
-  const value = ranking.value?.(metrics) ?? null
+  if ('ratio' in ranking) return <Figure ratio={ranking.ratio(metrics)} baseOnHover={false} />
+  const value = ranking.value(metrics)
   return value === null ? '–' : formatDecimal(value, 0)
+}
+
+function rankingTip(ranking: Ranking, row: PlaceRow): Tip {
+  if ('ratio' in ranking) {
+    return { title: row.name, rows: [ratioRow(ranking.key, ranking.ratio(row.metrics), ranking.describe)] }
+  }
+  const value = ranking.value(row.metrics)
+  return {
+    title: row.name,
+    rows: [
+      { key: ranking.key, value: value === null ? '–' : formatDecimal(value, 0), label: ranking.label },
+      ...ranking.details(row.counts),
+    ],
+  }
 }
 
 interface DistrictSectionProps {
@@ -80,6 +158,7 @@ export default function DistrictSection(props: DistrictSectionProps) {
     label: row.name,
     value,
     display: rankingDisplay(ranking, row.metrics),
+    tip: rankingTip(ranking, row),
     emphasized: row.key === district,
   })
   const barReference =
@@ -117,7 +196,7 @@ export default function DistrictSection(props: DistrictSectionProps) {
         <Panel
           wide
           title="District rankings"
-          description={ranking.ratio ? `${ranking.label}, out of all in each district` : ranking.label}
+          description={'ratio' in ranking ? `${ranking.label}, out of all in each district` : ranking.label}
           actions={
             <label className="select-field">
               <span className="visually-hidden">Rank districts by</span>
@@ -154,6 +233,7 @@ export default function DistrictSection(props: DistrictSectionProps) {
         >
           <Dumbbell
             labels={["Girls' schools", "Boys' schools"]}
+            measure="have an IT lab"
             items={genderGap.map(({ row, first, second }) => ({
               key: row.key,
               label: row.name,
