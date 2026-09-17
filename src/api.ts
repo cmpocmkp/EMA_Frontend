@@ -65,6 +65,51 @@ export function createUser(token: string, user: NewUser) {
   return request<User>('/api/users', { method: 'POST', body: JSON.stringify(user) }, token)
 }
 
+/** `value` out of `total`. */
+export interface Ratio {
+  value: number
+  total: number
+}
+
+export interface Summary {
+  /** When the school data was last refreshed from EMA. */
+  syncedAt: string | null
+  labCoverage: {
+    /** High and Higher Secondary schools with an IT lab. */
+    secondarySchools: Ratio
+    allSchools: Ratio
+    byLevel: (Ratio & { level: string })[]
+    /** Secondary schools only. */
+    byGender: (Ratio & { gender: string })[]
+  }
+  labEquipment: {
+    workingComputers: Ratio
+    labsWithWorkingComputer: Ratio
+    /** Out of the labs that reported internet access. */
+    labsWithInternet: Ratio
+  }
+  itTeachers: {
+    labsWithTeacher: Ratio
+    teachersInLabSchools: Ratio
+    schoolsWithTeacherButNoLab: number
+  }
+  studentReach: {
+    classSixToTwelve: Ratio
+    allStudents: Ratio
+    classSixToTwelvePerWorkingLabComputer: number | null
+  }
+  dataQuality: {
+    enrollmentReported: Ratio
+    locationKnown: Ratio
+    labStatusReported: Ratio
+  }
+}
+
+// Tagged with the latest syncs like the map points, so revisits get an empty 304 until the data changes.
+export function getSummary(token: string) {
+  return request<Summary>('/api/summary', {}, token)
+}
+
 /** [emisCode, longitude, latitude, hasItLab]; lab is 1, 0, or null when the school did not report it. */
 export type SchoolPoint = [string, number, number, 1 | 0 | null]
 

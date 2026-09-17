@@ -3,6 +3,7 @@ import AppLayout from './layout/AppLayout'
 import LoadingScreen from './layout/LoadingScreen'
 import LoginPage from './pages/LoginPage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import SummaryPage from './pages/SummaryPage'
 import UsersPage from './pages/UsersPage'
 
 export const router = createBrowserRouter([
@@ -19,7 +20,7 @@ export const router = createBrowserRouter([
         // Mapbox GL is large, so the map page loads on first visit instead of with the login screen.
         lazy: { Component: async () => (await import('./pages/MapPage')).default },
       },
-      { path: 'summary', element: <PlaceholderPage title="Summary" /> },
+      { path: 'summary', Component: SummaryPage },
       { path: 'division', element: <PlaceholderPage title="Division" /> },
       { path: 'district', element: <PlaceholderPage title="District" /> },
       { path: 'users', Component: UsersPage },
