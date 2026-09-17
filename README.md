@@ -35,6 +35,9 @@ Routing uses React Router 8. Every page except `/login` needs a signed-in user; 
 | `/login` | Sign-in |
 | `/map` | Khyber Pakhtunkhwa map: schools with an IT lab in green, without one in red, not reported in grey |
 | `/summary` | Summary (content to be decided) |
+| `/division` | Division (content to be decided) |
+| `/district` | District (content to be decided) |
+| `/users` | List of users and an Add user dialog |
 
 The layout adapts to the screen: a glass sidebar from 1200px, an icon rail from 768px, and a floating tab bar at the bottom on phones.
 

@@ -1,22 +1,16 @@
-import { ChartColumn, LogOut, Map as MapIcon } from 'lucide-react'
+import { ChartColumn, Layers, LogOut, Map as MapIcon, MapPinned, Users } from 'lucide-react'
 import { NavLink } from 'react-router'
 import type { User } from '../api'
 import { useSession } from '../session/session-context'
+import { initials } from './initials'
 
 const NAV_ITEMS = [
   { to: '/map', label: 'Map', icon: MapIcon },
   { to: '/summary', label: 'Summary', icon: ChartColumn },
+  { to: '/division', label: 'Division', icon: Layers },
+  { to: '/district', label: 'District', icon: MapPinned },
+  { to: '/users', label: 'Users', icon: Users },
 ]
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
 
 export default function Sidebar({ user }: { user: User }) {
   const { signOut } = useSession()

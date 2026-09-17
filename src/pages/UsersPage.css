@@ -1,0 +1,131 @@
+.page-header--actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.button--compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+}
+
+/* User list */
+
+.users {
+  padding: 8px;
+}
+
+.users__message {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--ink-muted);
+}
+
+.users__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.users__item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+}
+
+.users__item + .users__item {
+  border-top: 1px solid rgb(144 144 145 / 0.22);
+}
+
+.users__identity {
+  min-width: 0;
+  display: grid;
+  line-height: 1.3;
+}
+
+.users__identity strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.users__identity > span {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.users__you {
+  padding: 1px 8px;
+  border: 1px solid rgb(144 144 145 / 0.35);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  background: rgb(255 255 255 / 0.7);
+}
+
+.users__added {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* Add user dialog */
+
+.dialog {
+  /* .glass makes panels position: relative; a modal dialog must stay fixed and centred. */
+  position: fixed;
+  width: min(100% - 32px, 420px);
+  margin: auto;
+  padding: 24px;
+  color: var(--ink);
+}
+
+.dialog::backdrop {
+  background: rgb(99 99 100 / 0.28);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.dialog__form {
+  display: grid;
+  gap: 16px;
+}
+
+.dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dialog__header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+
+.field small {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 767px) {
+  .users__item {
+    grid-template-columns: auto 1fr;
+  }
+
+  .users__added {
+    grid-column: 2;
+    font-size: 0.78rem;
+  }
+}

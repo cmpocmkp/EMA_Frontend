@@ -2,7 +2,8 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import AppLayout from './layout/AppLayout'
 import LoadingScreen from './layout/LoadingScreen'
 import LoginPage from './pages/LoginPage'
-import SummaryPage from './pages/SummaryPage'
+import PlaceholderPage from './pages/PlaceholderPage'
+import UsersPage from './pages/UsersPage'
 
 export const router = createBrowserRouter([
   { path: '/login', Component: LoginPage },
@@ -18,7 +19,10 @@ export const router = createBrowserRouter([
         // Mapbox GL is large, so the map page loads on first visit instead of with the login screen.
         lazy: { Component: async () => (await import('./pages/MapPage')).default },
       },
-      { path: 'summary', Component: SummaryPage },
+      { path: 'summary', element: <PlaceholderPage title="Summary" /> },
+      { path: 'division', element: <PlaceholderPage title="Division" /> },
+      { path: 'district', element: <PlaceholderPage title="District" /> },
+      { path: 'users', Component: UsersPage },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },

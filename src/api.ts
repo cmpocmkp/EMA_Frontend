@@ -51,6 +51,20 @@ export function getCurrentUser(token: string, signal?: AbortSignal) {
   return request<User>('/api/auth/me', { signal }, token)
 }
 
+export function listUsers(token: string) {
+  return request<User[]>('/api/users', {}, token)
+}
+
+export interface NewUser {
+  username: string
+  name: string
+  password: string
+}
+
+export function createUser(token: string, user: NewUser) {
+  return request<User>('/api/users', { method: 'POST', body: JSON.stringify(user) }, token)
+}
+
 /** [emisCode, longitude, latitude, hasItLab]; lab is 1, 0, or null when the school did not report it. */
 export type SchoolPoint = [string, number, number, 1 | 0 | null]
 
