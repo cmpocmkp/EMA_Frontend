@@ -1,0 +1,167 @@
+/* The map fills the window; the glass sidebar, legend and controls float above it. */
+.map-page {
+  position: fixed;
+  inset: 0;
+}
+
+/* Legend and status, placed just right of the sidebar or rail */
+
+.map-legend,
+.map-status {
+  position: absolute;
+  z-index: 5;
+  top: var(--sidebar-gap);
+  left: calc(var(--sidebar-width) + var(--sidebar-gap) * 2);
+}
+
+.map-legend {
+  padding: 14px 16px;
+  border-radius: 20px;
+}
+
+.map-legend h2 {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.map-legend ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.map-legend li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.map-legend strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.map-legend__dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(99 99 100 / 0.35);
+}
+
+.map-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.map-status__retry {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--pearl-900);
+  cursor: pointer;
+}
+
+/* Glass zoom controls to match the sidebar */
+
+.map-page .mapboxgl-ctrl-top-right {
+  top: 6px;
+  right: 6px;
+}
+
+.map-page .mapboxgl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid var(--glass-edge);
+  border-radius: 14px;
+  background: var(--glass-fill);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.map-page .mapboxgl-ctrl-group button {
+  width: 40px;
+  height: 40px;
+}
+
+.map-page .mapboxgl-ctrl-group button + button {
+  border-top-color: rgb(144 144 145 / 0.3);
+}
+
+/* Mapbox requires its logo and attribution to stay visible, so keep them clear of the sidebar. */
+.map-page .mapboxgl-ctrl-bottom-left {
+  left: calc(var(--sidebar-width) + var(--sidebar-gap) * 2 - 10px);
+}
+
+@media (max-width: 767px) {
+  .map-legend,
+  .map-status {
+    top: calc(12px + env(safe-area-inset-top));
+    right: 64px;
+    left: 12px;
+  }
+
+  .map-status {
+    right: auto;
+  }
+
+  .map-legend {
+    padding: 10px 14px;
+  }
+
+  .map-legend h2 {
+    display: none;
+  }
+
+  /* The three items side by side, each with its count under the label. */
+  .map-legend ul {
+    grid-template-columns: repeat(3, auto);
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .map-legend li {
+    grid-template-columns: auto auto;
+    column-gap: 6px;
+    row-gap: 0;
+    font-size: 0.75rem;
+  }
+
+  .map-legend__dot {
+    grid-row: span 2;
+  }
+
+  .map-legend strong {
+    font-size: 0.85rem;
+  }
+
+  .map-page .mapboxgl-ctrl-top-right {
+    top: calc(6px + env(safe-area-inset-top));
+  }
+
+  /* Lift the logo and attribution above the bottom tab bar. */
+  .map-page .mapboxgl-ctrl-bottom-left,
+  .map-page .mapboxgl-ctrl-bottom-right {
+    bottom: calc(86px + env(safe-area-inset-bottom));
+  }
+
+  .map-page .mapboxgl-ctrl-bottom-left {
+    left: 0;
+  }
+}

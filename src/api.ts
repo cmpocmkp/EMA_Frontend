@@ -50,3 +50,11 @@ export function login(username: string, password: string) {
 export function getCurrentUser(token: string, signal?: AbortSignal) {
   return request<User>('/api/auth/me', { signal }, token)
 }
+
+/** [emisCode, longitude, latitude, hasItLab]; lab is 1, 0, or null when the school did not report it. */
+export type SchoolPoint = [string, number, number, 1 | 0 | null]
+
+// The API tags this response with the last schools sync, so the browser revalidates and gets an empty 304 until data changes.
+export function getSchoolPoints(token: string) {
+  return request<{ schools: SchoolPoint[] }>('/api/map/schools', {}, token)
+}

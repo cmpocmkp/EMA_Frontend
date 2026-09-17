@@ -1,9 +1,7 @@
 import { type FormEvent, useState } from 'react'
-import { ApiError, login, type Session } from './api'
-
-interface LoginPageProps {
-  onSignedIn: (session: Session) => void
-}
+import { Navigate, useLocation } from 'react-router'
+import { ApiError, login } from '../api'
+import { useSession } from '../session/session-context'
 
 function describeError(error: unknown) {
   if (error instanceof ApiError) {
@@ -16,9 +14,17 @@ function describeError(error: unknown) {
   return error instanceof Error ? error.message : 'Something went wrong. Try again.'
 }
 
-export default function LoginPage({ onSignedIn }: LoginPageProps) {
+export default function LoginPage() {
+  const { session, signIn } = useSession()
+  const location = useLocation()
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  if (session) {
+    // Return to the page that sent the user here, if any.
+    const from = (location.state as { from?: string } | null)?.from
+    return <Navigate to={from ?? '/'} replace />
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -26,7 +32,7 @@ export default function LoginPage({ onSignedIn }: LoginPageProps) {
     setError(null)
     setSubmitting(true)
     try {
-      onSignedIn(await login(String(form.get('username')), String(form.get('password'))))
+      signIn(await login(String(form.get('username')), String(form.get('password'))))
     } catch (caught) {
       setError(describeError(caught))
       setSubmitting(false)
