@@ -33,8 +33,8 @@ Routing uses React Router 8. Every page except `/login` needs a signed-in user; 
 | Route | Page |
 | --- | --- |
 | `/login` | Sign-in |
-| `/map` | Khyber Pakhtunkhwa map: schools with an IT lab in green, without one in red, not reported in grey. Clicking a dot opens the school's name, district, tehsil, level, gender and IT lab status |
-| `/summary` | Filterable by division, district and tehsil (kept in the URL). Four cards whose headlines are out of all schools or all students, a division scorecard and charts, district rankings, a gender comparison, IT teachers by designation per district, a sortable district table with tehsil drill-down, and students by class. Tables and charts show each count with its share in brackets, e.g. `134 (9.9%)`; hover a figure for its base. Everything is added up in the browser from one `GET /api/summary` response, plus `GET /api/summary/tehsils` for the chosen district |
+| `/map` | Khyber Pakhtunkhwa map: schools with an IT lab in green, without one in red, not reported in grey. Clicking a dot opens the school's name, district, tehsil, level, gender, IT lab status and computers (total and working) |
+| `/summary` | Filterable by division, district and tehsil (kept in the URL). Four cards whose headlines are out of all schools or all students, a division scorecard and charts, district rankings, a gender comparison, IT teachers by designation and computers working and not working per division and district, a sortable district table with tehsil drill-down, and students by class. Tables and charts show each count with its share in brackets, e.g. `134 (9.9%)`; hover a figure for its base. Everything is added up in the browser from one `GET /api/summary` response, plus `GET /api/summary/tehsils` for the chosen district |
 | `/users` | List of users and an Add user dialog |
 
 The layout adapts to the screen: a glass sidebar from 1200px, an icon rail from 768px, and a floating tab bar at the bottom on phones.

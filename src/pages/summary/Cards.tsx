@@ -1,5 +1,5 @@
 import { GraduationCap, Monitor, School, Users } from 'lucide-react'
-import { formatDecimal } from '../../format'
+import { formatDecimal, formatNumber } from '../../format'
 import { addBy, type Cell, GENDERS, LEVELS, ratio, summarize } from './data'
 import { Note, RatioRow, Section, StatRow, SummaryCard } from './parts'
 
@@ -47,6 +47,7 @@ export default function Cards({ cells }: { cells: Cell[] }) {
         caption="schools have a working computer"
       >
         <Section title="Computers">
+          <StatRow label="Computers" value={formatNumber(counts.computers)} />
           <RatioRow label="Computers that work" ratio={metrics.workingComputers} />
           <StatRow label="Computers per IT lab" value={perLab(metrics.computersPerLab)} />
           <StatRow label="Working computers per IT lab" value={perLab(metrics.workingComputersPerLab)} />

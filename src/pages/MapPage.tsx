@@ -11,7 +11,7 @@ import Map, {
   Layer,
 } from 'react-map-gl/mapbox'
 import { ApiError, getSchool, getSchoolPoints, type SchoolDetails, type SchoolPoint } from '../api'
-import { formatPlaceName } from '../format'
+import { formatNumber, formatPercent, formatPlaceName } from '../format'
 import { useSession } from '../session/session-context'
 import './MapPage.css'
 
@@ -341,6 +341,7 @@ function SchoolPopup({ selection, accessToken, onClose, onUnauthorized }: School
               {LAB_LABELS[labStatus(details.school.hasItLab)]}
             </dd>
           </div>
+          <ComputerFacts computers={details.school.computers} working={details.school.functionalComputers} />
           <div>
             <dt>EMIS code</dt>
             <dd>{details.school.emisCode}</dd>
@@ -348,6 +349,41 @@ function SchoolPopup({ selection, accessToken, onClose, onUnauthorized }: School
         </dl>
       )}
     </Popup>
+  )
+}
+
+/** The school's computers, and how many of them work with their share in brackets. */
+function ComputerFacts({ computers, working }: { computers: number | null; working: number | null }) {
+  if (computers === null) {
+    return (
+      <div>
+        <dt>Computers</dt>
+        <dd>Not reported</dd>
+      </div>
+    )
+  }
+  return (
+    <>
+      <div>
+        <dt>Computers</dt>
+        <dd>{formatNumber(computers)}</dd>
+      </div>
+      <div>
+        <dt>Working</dt>
+        <dd>
+          {working === null ? (
+            'Not reported'
+          ) : (
+            <span>
+              {formatNumber(working)}
+              {computers > 0 && (
+                <small className="school-popup__share"> ({formatPercent({ value: working, total: computers })})</small>
+              )}
+            </span>
+          )}
+        </dd>
+      </div>
+    </>
   )
 }
 

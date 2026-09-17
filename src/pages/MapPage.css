@@ -275,6 +275,12 @@
   font-weight: 550;
 }
 
+.school-popup__share {
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
 .school-popup__dot {
   flex: none;
   width: 10px;

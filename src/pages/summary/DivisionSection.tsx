@@ -4,6 +4,8 @@ import { BarList, type Column, DataTable, Dumbbell, Heatmap, StackedBars } from 
 import {
   add,
   type Cell,
+  COMPUTER_STATES,
+  computerStateCounts,
   DESIGNATIONS,
   designationCounts,
   type Division,
@@ -40,6 +42,14 @@ const scorecardColumns: Column<PlaceRow>[] = [
     render: (row) => formatNumber(row.metrics.students),
   },
   figure('labs', 'With IT lab', (row) => row.metrics.labCoverage),
+  {
+    key: 'computers',
+    label: 'Computers',
+    numeric: true,
+    sortValue: (row) => row.counts.computers,
+    render: (row) => formatNumber(row.counts.computers),
+  },
+  figure('working', 'Computers working', (row) => row.metrics.workingComputers),
   figure('computer', 'With working computer', (row) => row.metrics.schoolsWithWorkingComputer),
   figure('internet', 'With internet', (row) => row.metrics.schoolsWithInternet),
   figure('teacher', 'With IT teacher', (row) => row.metrics.schoolsWithTeacher),
@@ -91,7 +101,7 @@ export default function DivisionSection({ cells, divisions, selected }: Division
         <Panel
           wide
           title="Division scorecard"
-          description="Each figure has its share in brackets, out of all schools in each division; for students in lab schools, out of all students."
+          description="Each figure has its share in brackets, out of all schools in each division; for computers working, out of all computers; for students in lab schools, out of all students."
         >
           <DataTable
             caption="Division scorecard"
@@ -143,7 +153,11 @@ export default function DivisionSection({ cells, divisions, selected }: Division
           />
         </Panel>
 
-        <Panel title="Girls' and boys' schools with an IT lab" description="Out of all girls' schools and all boys' schools in each division">
+        <Panel
+          wide
+          title="Girls' and boys' schools with an IT lab"
+          description="Out of all girls' schools and all boys' schools in each division"
+        >
           <Dumbbell
             labels={["Girls' schools", "Boys' schools"]}
             measure="have an IT lab"
@@ -172,6 +186,23 @@ export default function DivisionSection({ cells, divisions, selected }: Division
               key: row.key,
               label: row.name,
               values: designationCounts(row.counts),
+              emphasized: row.key === selected,
+            }))}
+          />
+        </Panel>
+
+        <Panel
+          title="Computers, working and not working"
+          description="Computers in each division, with their share of all computers in brackets. Hover or tap a bar for working and not working."
+        >
+          <StackedBars
+            unit="computers"
+            scope="Khyber Pakhtunkhwa"
+            series={COMPUTER_STATES}
+            items={rows.map((row) => ({
+              key: row.key,
+              label: row.name,
+              values: computerStateCounts(row.counts),
               emphasized: row.key === selected,
             }))}
           />

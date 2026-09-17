@@ -11,6 +11,12 @@ export const DESIGNATIONS = [
   { key: 'sst', label: 'SST (IT)', color: '#707074' },
   { key: 'specialist', label: 'Subject Specialist (IT)', color: '#3f3f42' },
 ]
+
+// Computers that work in the dark step of the same scale, the rest in the light one.
+export const COMPUTER_STATES = [
+  { key: 'working', label: 'Working', color: '#3f3f42' },
+  { key: 'notWorking', label: 'Not working', color: '#9e9ea2' },
+]
 const CLASS_1 = 2
 const CLASS_6 = 7
 const CLASS_10 = 11
@@ -92,6 +98,12 @@ export const designationCounts = (counts: Counts) => [
   counts.teachersCt,
   counts.teachersSst,
   counts.teachersSubjectSpecialist,
+]
+
+/** Computers that work and that don't, in COMPUTER_STATES order. */
+export const computerStateCounts = (counts: Counts) => [
+  counts.workingComputers,
+  Math.max(0, counts.computers - counts.workingComputers),
 ]
 
 const sum = (numbers: number[]) => numbers.reduce((total, value) => total + value, 0)

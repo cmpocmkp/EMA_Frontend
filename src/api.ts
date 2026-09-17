@@ -108,6 +108,9 @@ export interface SchoolDetails {
   level: string
   gender: string
   hasItLab: boolean | null
+  /** Null when the school did not report them, as for most schools without an IT lab. */
+  computers: number | null
+  functionalComputers: number | null
 }
 
 export function getSchool(token: string, emisCode: string) {

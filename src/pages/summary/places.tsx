@@ -68,6 +68,8 @@ export const TABLE_VIEWS: { key: string; label: string; columns: Column<PlaceRow
       count('schools', 'Schools', (row) => row.counts.schools),
       count('students', 'Students', (row) => row.metrics.students),
       figure('labs', 'With IT lab', (row) => row.metrics.labCoverage),
+      count('computers', 'Computers', (row) => row.counts.computers),
+      figure('working', 'Computers working', (row) => row.metrics.workingComputers),
       figure('computer', 'With working computer', (row) => row.metrics.schoolsWithWorkingComputer),
       figure('internet', 'With internet', (row) => row.metrics.schoolsWithInternet),
       figure('teacher', 'With IT teacher', (row) => row.metrics.schoolsWithTeacher),

@@ -7,6 +7,8 @@ import { type BarItem, BarList, DataTable, Dumbbell, StackedBars } from './chart
 import {
   add,
   type Cell,
+  COMPUTER_STATES,
+  computerStateCounts,
   type Counts,
   DESIGNATIONS,
   designationCounts,
@@ -198,13 +200,16 @@ export default function DistrictSection(props: DistrictSectionProps) {
     })
     .sort((a, b) => a.gap - b.gap)
 
-  // Most IT teachers first.
-  const teachers = rows
-    .map((row) => {
-      const values = designationCounts(row.counts)
-      return { row, values, total: values.reduce((sum, value) => sum + value, 0) }
-    })
-    .sort((a, b) => b.total - a.total || a.row.name.localeCompare(b.row.name))
+  // Largest first.
+  const byTotal = (toValues: (counts: Counts) => number[]) =>
+    rows
+      .map((row) => {
+        const values = toValues(row.counts)
+        return { row, values, total: values.reduce((sum, value) => sum + value, 0) }
+      })
+      .sort((a, b) => b.total - a.total || a.row.name.localeCompare(b.row.name))
+  const teachers = byTotal(designationCounts)
+  const computers = byTotal(computerStateCounts)
 
   const view = TABLE_VIEWS.find((entry) => entry.key === viewKey) ?? TABLE_VIEWS[0]
   const needle = query.trim().toLowerCase()
@@ -275,6 +280,24 @@ export default function DistrictSection(props: DistrictSectionProps) {
             scope={scopeLabel}
             series={DESIGNATIONS}
             items={teachers.map(({ row, values }) => ({
+              key: row.key,
+              label: row.name,
+              values,
+              emphasized: row.key === district,
+            }))}
+          />
+        </Panel>
+
+        <Panel
+          wide
+          title="Computers, working and not working, by district"
+          description={`Computers in each district, most first, with their share of all computers in ${scopeLabel} in brackets. Hover or tap a bar for working and not working.`}
+        >
+          <StackedBars
+            unit="computers"
+            scope={scopeLabel}
+            series={COMPUTER_STATES}
+            items={computers.map(({ row, values }) => ({
               key: row.key,
               label: row.name,
               values,
