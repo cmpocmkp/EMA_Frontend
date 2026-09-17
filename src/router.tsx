@@ -3,7 +3,7 @@ import AppLayout from './layout/AppLayout'
 import LoadingScreen from './layout/LoadingScreen'
 import LoginPage from './pages/LoginPage'
 import PlaceholderPage from './pages/PlaceholderPage'
-import SummaryPage from './pages/SummaryPage'
+import SummaryPage from './pages/summary/SummaryPage'
 import UsersPage from './pages/UsersPage'
 
 export const router = createBrowserRouter([

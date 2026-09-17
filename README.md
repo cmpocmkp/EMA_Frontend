@@ -34,7 +34,7 @@ Routing uses React Router 8. Every page except `/login` needs a signed-in user; 
 | --- | --- |
 | `/login` | Sign-in |
 | `/map` | Khyber Pakhtunkhwa map: schools with an IT lab in green, without one in red, not reported in grey |
-| `/summary` | Four cards from `GET /api/summary`: IT lab coverage, computers and internet, IT teachers, students and data completeness |
+| `/summary` | Filterable by division and district (kept in the URL). Four cards whose headlines are out of all schools or all students, a division scorecard and charts, district rankings, a gender comparison, a sortable district table with tehsil drill-down, and students by class. Everything is added up in the browser from one `GET /api/summary` response |
 | `/division` | Division (content to be decided) |
 | `/district` | District (content to be decided) |
 | `/users` | List of users and an Add user dialog |

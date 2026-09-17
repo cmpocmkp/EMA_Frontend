@@ -6,6 +6,17 @@ export function formatNumber(value: number) {
   return numbers.format(value)
 }
 
+export function formatDecimal(value: number, digits = 1) {
+  return value.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })
+}
+
+const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+
+/** 685,875 → 685.9K, for axis ticks. */
+export function formatCompact(value: number) {
+  return compact.format(value)
+}
+
 /** One decimal place; a partial share is never shown as 0% or 100%. */
 export function formatPercent({ value, total }: Ratio) {
   if (total === 0) return '–'

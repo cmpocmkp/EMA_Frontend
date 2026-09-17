@@ -71,43 +71,25 @@ export interface Ratio {
   total: number
 }
 
-export interface Summary {
-  /** When the school data was last refreshed from EMA. */
-  syncedAt: string | null
-  labCoverage: {
-    /** High and Higher Secondary schools with an IT lab. */
-    secondarySchools: Ratio
-    allSchools: Ratio
-    byLevel: (Ratio & { level: string })[]
-    /** Secondary schools only. */
-    byGender: (Ratio & { gender: string })[]
-  }
-  labEquipment: {
-    workingComputers: Ratio
-    labsWithWorkingComputer: Ratio
-    /** Out of the labs that reported internet access. */
-    labsWithInternet: Ratio
-  }
-  itTeachers: {
-    labsWithTeacher: Ratio
-    teachersInLabSchools: Ratio
-    schoolsWithTeacherButNoLab: number
-  }
-  studentReach: {
-    classSixToTwelve: Ratio
-    allStudents: Ratio
-    classSixToTwelvePerWorkingLabComputer: number | null
-  }
-  dataQuality: {
-    enrollmentReported: Ratio
-    locationKnown: Ratio
-    labStatusReported: Ratio
-  }
+/** Counts per place (district or tehsil), level and gender, as rows of values in `fields` order. */
+export interface SummaryCells {
+  fields: string[]
+  rows: unknown[][]
 }
 
-// Tagged with the latest syncs like the map points, so revisits get an empty 304 until the data changes.
+export interface SummaryResponse extends SummaryCells {
+  /** When the school data was last refreshed from EMA. */
+  syncedAt: string | null
+  divisions: { division: string; districts: string[] }[]
+}
+
+// Both are tagged with the latest syncs like the map points, so revisits get an empty 304 until the data changes.
 export function getSummary(token: string) {
-  return request<Summary>('/api/summary', {}, token)
+  return request<SummaryResponse>('/api/summary', {}, token)
+}
+
+export function getTehsils(token: string, district: string) {
+  return request<SummaryCells>(`/api/summary/tehsils?district=${encodeURIComponent(district)}`, {}, token)
 }
 
 /** [emisCode, longitude, latitude, hasItLab]; lab is 1, 0, or null when the school did not report it. */
