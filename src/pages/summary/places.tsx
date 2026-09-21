@@ -28,7 +28,7 @@ export function placeRows(cells: Cell[], divisionOf?: (place: string) => string)
   }))
 }
 
-const count = (key: string, label: string, pick: (row: PlaceRow) => number): Column<PlaceRow> => ({
+export const count = (key: string, label: string, pick: (row: PlaceRow) => number): Column<PlaceRow> => ({
   key,
   label,
   numeric: true,

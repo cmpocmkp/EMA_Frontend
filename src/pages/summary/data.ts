@@ -31,6 +31,7 @@ const COUNT_FIELDS = [
   'schoolsWithWorkingComputer',
   'labsWithWorkingComputer',
   'labsAllComputersWorking',
+  'labsWithoutComputer',
   'schoolsWithInternet',
   'labsWithInternet',
   'labsReportingInternet',
@@ -126,6 +127,17 @@ export function metrics(counts: Counts, secondary: Counts) {
     labsAllComputersWorking: ratio(counts.labsAllComputersWorking, counts.labs),
     schoolsWithInternet: ratio(counts.schoolsWithInternet, counts.schools),
     labsWithInternet: ratio(counts.labsWithInternet, counts.labsReportingInternet),
+    // The three ways an IT lab falls short, each out of all IT labs, or of the labs that reported internet.
+    labsWithoutComputer: ratio(counts.labsWithoutComputer, counts.labs),
+    labsWithNothingWorking: ratio(
+      counts.labs - counts.labsWithWorkingComputer - counts.labsWithoutComputer,
+      counts.labs,
+    ),
+    labsWithoutTeacher: ratio(counts.labs - counts.labsWithTeacher, counts.labs),
+    labsWithoutInternet: ratio(
+      counts.labsReportingInternet - counts.labsWithInternet,
+      counts.labsReportingInternet,
+    ),
     schoolsWithTeacher: ratio(counts.schoolsWithTeacher, counts.schools),
     labsWithTeacher: ratio(counts.labsWithTeacher, counts.labs),
     teachersInLabSchools: ratio(counts.teachersInLabSchools, counts.teachers),

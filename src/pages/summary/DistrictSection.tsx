@@ -3,7 +3,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, type Ratio } from '../../api'
 import { formatDecimal, formatNumber } from '../../format'
 import { ratioRow, type Tip, type TipRow } from './chart-tooltip'
-import { type BarItem, BarList, DataTable, Dumbbell, StackedBars } from './charts'
+import { type BarItem, BarList, type Column, DataTable, Dumbbell, StackedBars } from './charts'
 import {
   add,
   type Cell,
@@ -21,7 +21,7 @@ import {
   toCells,
 } from './data'
 import { Figure, Panel, Segmented } from './parts'
-import { divisionColumn, nameColumn, type PlaceRow, placeRows, TABLE_VIEWS } from './places'
+import { count, divisionColumn, figure, nameColumn, type PlaceRow, placeRows, TABLE_VIEWS } from './places'
 import { loadTehsils } from './tehsils'
 
 /** Share rankings show a count with its share; the rest show a whole number. */
@@ -133,6 +133,17 @@ function rankingTip(ranking: Ranking, row: PlaceRow): Tip {
   }
 }
 
+/** What an IT lab is missing. Shares are out of the district's labs, except internet, which only some labs report. */
+const gapColumns: Column<PlaceRow>[] = [
+  nameColumn('District'),
+  divisionColumn,
+  count('labs', 'IT labs', (row) => row.counts.labs),
+  figure('noComputer', 'Lab but no computer', (row) => row.metrics.labsWithoutComputer),
+  figure('nothingWorking', 'Computers, none working', (row) => row.metrics.labsWithNothingWorking),
+  figure('noTeacher', 'No IT teacher', (row) => row.metrics.labsWithoutTeacher),
+  figure('noInternet', 'No internet, of labs that reported', (row) => row.metrics.labsWithoutInternet),
+]
+
 interface DistrictSectionProps {
   cells: Cell[]
   divisions: Division[]
@@ -159,7 +170,9 @@ export default function DistrictSection(props: DistrictSectionProps) {
     [cells, division, divisionOf],
   )
   const rows = useMemo(() => placeRows(scoped, (place) => divisionOf.get(place) ?? 'Unassigned'), [scoped, divisionOf])
-  const reference = useMemo(() => summarize(scoped).metrics, [scoped])
+  const scopeTotals = useMemo(() => summarize(scoped), [scoped])
+  const reference = scopeTotals.metrics
+  const scopeRow: PlaceRow = { key: 'scope', name: scopeLabel, ...scopeTotals }
 
   const ranking = RANKINGS.find((entry) => entry.key === rankingKey) ?? RANKINGS[0]
   const ranked = rows
@@ -303,6 +316,22 @@ export default function DistrictSection(props: DistrictSectionProps) {
               values,
               emphasized: row.key === district,
             }))}
+          />
+        </Panel>
+
+        <Panel
+          wide
+          title="What IT labs are missing, by district"
+          description="Districts with the most IT labs that have no computer first. Shares are out of each district's IT labs, except internet, which is out of the labs that reported it."
+        >
+          <DataTable
+            caption="IT lab gaps by district"
+            rows={rows}
+            columns={gapColumns}
+            rowKey={(row) => row.key}
+            initialSort={{ key: 'noComputer', descending: true }}
+            footerRow={scopeRow}
+            emphasizedKey={district}
           />
         </Panel>
 
