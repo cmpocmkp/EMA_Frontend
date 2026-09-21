@@ -43,11 +43,11 @@ export default function LoginPage() {
     <main className="page">
       <form className="glass login" onSubmit={handleSubmit} aria-labelledby="login-title">
         <div className="brand-mark" aria-hidden="true">
-          EMA
+          LW
         </div>
         <div className="login__heading">
           <h1 id="login-title">Sign in</h1>
-          <p>Sign in to continue to EMA.</p>
+          <p>Sign in to continue to LabWatch KP.</p>
         </div>
 
         <label className="field">

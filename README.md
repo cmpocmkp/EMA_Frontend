@@ -1,6 +1,6 @@
-# EMA Frontend
+# LabWatch KP — Frontend
 
-React 19 app for EMA, built with Vite. It talks to the [EMA Backend](https://github.com/cmpocmkp/EMA_Backend) API.
+React 19 app for LabWatch KP, the dashboard for IT labs in Khyber Pakhtunkhwa's schools, built with Vite. It talks to the [backend](https://github.com/cmpocmkp/EMA_Backend) API.
 
 ## Setup
 

@@ -17,11 +17,11 @@ export default function Sidebar({ user }: { user: User }) {
     <aside className="sidebar glass">
       <div className="sidebar__brand">
         <div className="brand-mark brand-mark--small" aria-hidden="true">
-          EMA
+          LW
         </div>
         <div className="sidebar__brand-text">
-          <strong>EMA</strong>
-          <span>Dashboard</span>
+          <strong>LabWatch</strong>
+          <span>Khyber Pakhtunkhwa</span>
         </div>
       </div>
 
